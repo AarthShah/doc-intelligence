@@ -1,0 +1,78 @@
+# doc-intelligence Master Hierarchical Roadmap
+project:
+  name: "doc-intelligence"
+  tagline: "Industrial-Grade Document Intelligence & RAG Evaluation Platform"
+
+vision: >
+  Provide production teams with high-accuracy multimodal document parsing, intelligent
+  semantic chunking, hybrid vector search, and verifiable hallucination evaluation metrics
+  for enterprise retrieval-augmented generation systems.
+
+milestones:
+  - id: "M1"
+    name: "Foundation: Ingestion, Chunking & Evaluation Core"
+    duration_weeks: 2
+    status: "in_progress"
+    epics:
+      - id: "EPIC-01"
+        name: "Document Ingestion & Normalization"
+        features:
+          - id: "FEAT-01"
+            name: "Multi-Format Parser (PDF, Markdown, Text)"
+            tasks:
+              - id: "DOC-TASK-001"
+                title: "Build TextParser, MarkdownParser, and PDFParser"
+                status: "done"
+      - id: "EPIC-02"
+        name: "Intelligent Semantic Chunking"
+        features:
+          - id: "FEAT-02"
+            name: "Semantic Boundary & Sliding Window Chunkers"
+            tasks:
+              - id: "DOC-TASK-002"
+                title: "Implement SemanticChunker and SlidingWindowChunker"
+                status: "done"
+      - id: "EPIC-03"
+        name: "Hybrid Retrieval & Dense Vector Store"
+        features:
+          - id: "FEAT-03"
+            name: "Cosine Vector Index & BM25 Ranker"
+            tasks:
+              - id: "DOC-TASK-003"
+                title: "Implement VectorStore and BM25Retriever with Reciprocal Rank Fusion"
+                status: "done"
+      - id: "EPIC-04"
+        name: "RAG Evaluation & Hallucination Metrics"
+        features:
+          - id: "FEAT-04"
+            name: "Faithfulness, Relevance, and Hallucination Scoring"
+            tasks:
+              - id: "DOC-TASK-004"
+                title: "Implement RAGEvaluator with statistical overlap and token analysis"
+                status: "done"
+
+  - id: "M2"
+    name: "FastAPI Serving & Streaming Inference"
+    duration_weeks: 2
+    status: "planned"
+    epics:
+      - id: "EPIC-05"
+        name: "Production REST API"
+        features:
+          - id: "FEAT-05"
+            name: "Asynchronous document ingestion & search endpoints"
+
+  - id: "M3"
+    name: "Advanced Multimodal OCR & Table Extraction"
+    duration_weeks: 3
+    status: "planned"
+
+  - id: "M4"
+    name: "Enterprise Integrations (Milvus, Qdrant, Chroma, PGVector)"
+    duration_weeks: 3
+    status: "planned"
+
+  - id: "M5"
+    name: "Automated Benchmarking & Final 1.0 Release"
+    duration_weeks: 2
+    status: "planned"

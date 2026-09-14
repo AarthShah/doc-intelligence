@@ -1,0 +1,39 @@
+# doc-intelligence Autonomous Project State
+schema_version: "1.0.0"
+project:
+  name: "doc-intelligence"
+  repository: "AarthShah/doc-intelligence"
+  remote_url: "https://github.com/AarthShah/doc-intelligence.git"
+  status: "in_development"
+  started_date: "2026-09-14"
+  last_updated: "2026-09-14"
+
+current_milestone:
+  id: "M1"
+  name: "Foundation: Ingestion, Chunking & RAG Evaluation"
+  target_completion: "2026-09-28"
+  status: "in_progress"
+
+active_task:
+  id: "DOC-TASK-001"
+  epic: "EPIC-01-CORE-PIPELINE"
+  name: "Implement Multimodal Ingestion, Semantic Chunking, and RAG Evaluator"
+  priority: "P2"
+  status: "in_progress"
+  started_at: "2026-09-14T15:00:00+05:30"
+
+completion_criteria:
+  definition_of_done:
+    - "Core ingestion pipeline parses PDF, Markdown, and Plaintext"
+    - "Semantic & sliding-window chunking with configurable overlaps"
+    - "Dense vector store with cosine similarity and BM25 hybrid retrieval"
+    - "RAG evaluation suite computing faithfulness, answer relevance, and hallucination metrics"
+    - "FastAPI REST API endpoints with automated OpenAPI schemas"
+    - "Comprehensive test suite with >90% code coverage"
+    - "Production documentation, benchmarks, and quickstart examples"
+
+daily_schedule:
+  target_days_per_week: 5
+  auto_stop_after_daily_unit: true
+  last_run_date: "2026-09-14"
+  last_run_status: "in_progress"
