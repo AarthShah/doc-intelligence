@@ -1,285 +1,247 @@
-# doc-intelligence 12-Week Master Incremental Roadmap
-# Cadence: 1 atomic task per development day (5 days/week)
 project:
-  name: "doc-intelligence"
-  tagline: "Industrial-Grade Document Intelligence & RAG Evaluation Platform"
+  name: doc-intelligence
+  tagline: Industrial-Grade Document Intelligence & RAG Evaluation Platform
   total_weeks: 12
   total_tasks: 60
-
 milestones:
-  # -------------------------------------------------------------
-  # WEEK 1: Ingestion Pipeline & Advanced Format Parsers
-  # -------------------------------------------------------------
-  - id: "M01"
-    name: "Week 1: Document Ingestion & Format Extractors"
-    status: "in_progress"
-    tasks:
-      - id: "TASK-W01-D1"
-        title: "Initialize project structure, core Document models, and baseline parsers"
-        status: "done"
-        completed_date: "2026-09-14"
-      - id: "TASK-W01-D2"
-        title: "Implement MultiColumnPDFExtractor with layout detection and header/footer stripping"
-        status: "planned"
-      - id: "TASK-W01-D3"
-        title: "Implement HTMLParser and ePubExtractor with DOM hierarchy normalization"
-        status: "planned"
-      - id: "TASK-W01-D4"
-        title: "Build DocumentSanitizer with PII redaction (emails, phone numbers, API keys)"
-        status: "planned"
-      - id: "TASK-W01-D5"
-        title: "Create IngestionBenchmark suite evaluating throughput on 100 sample documents"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 2: Advanced Chunking & Token Budgeting
-  # -------------------------------------------------------------
-  - id: "M02"
-    name: "Week 2: Advanced Chunking & Hierarchy Preservation"
-    status: "planned"
-    tasks:
-      - id: "TASK-W02-D1"
-        title: "Implement RecursiveCharacterChunker with hierarchy of separator patterns"
-        status: "planned"
-      - id: "TASK-W02-D2"
-        title: "Implement TableAwareChunker preserving Markdown and HTML tables intact"
-        status: "planned"
-      - id: "TASK-W02-D3"
-        title: "Implement CodeBlockChunker for mixed technical documentation and scripts"
-        status: "planned"
-      - id: "TASK-W02-D4"
-        title: "Add ContextualChunkEnricher injecting document title and section breadcrumbs"
-        status: "planned"
-      - id: "TASK-W02-D5"
-        title: "Unit tests and token distribution analyzer for all chunking strategies"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 3: Dense Vector Embeddings & Index Serialization
-  # -------------------------------------------------------------
-  - id: "M03"
-    name: "Week 3: Dense Vector Embeddings & Storage"
-    status: "planned"
-    tasks:
-      - id: "TASK-W03-D1"
-        title: "Abstract BaseEmbeddingProvider interface with batch encoding and caching"
-        status: "planned"
-      - id: "TASK-W03-D2"
-        title: "Implement FastEmbedLocalProvider for lightweight offline CPU embeddings"
-        status: "planned"
-      - id: "TASK-W03-D3"
-        title: "Implement persistent binary VectorStore with memory-mapped file storage"
-        status: "planned"
-      - id: "TASK-W03-D4"
-        title: "Implement cosine, euclidean, and dot product similarity kernels"
-        status: "planned"
-      - id: "TASK-W03-D5"
-        title: "Vector retrieval evaluation suite computing Mean Reciprocal Rank (MRR@10)"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 4: Lexical Retrieval & Hybrid Fusion
-  # -------------------------------------------------------------
-  - id: "M04"
-    name: "Week 4: BM25 Lexical Engine & Hybrid Search"
-    status: "planned"
-    tasks:
-      - id: "TASK-W04-D1"
-        title: "Implement inverted index with Porter stemmer and domain stopword filters"
-        status: "planned"
-      - id: "TASK-W04-D2"
-        title: "Implement BM25+ and BM25L variants for short and long document normalization"
-        status: "planned"
-      - id: "TASK-W04-D3"
-        title: "Enhance Reciprocal Rank Fusion (RRF) with configurable dense/sparse weights"
-        status: "planned"
-      - id: "TASK-W04-D4"
-        title: "Implement CrossEncoderReRanker interface for contextual candidate re-scoring"
-        status: "planned"
-      - id: "TASK-W04-D5"
-        title: "Comparative benchmark: Dense vs BM25 vs Hybrid RRF on MS-MARCO sample"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 5: Context Assembly & Prompt Engineering
-  # -------------------------------------------------------------
-  - id: "M05"
-    name: "Week 5: Context Assembly & Query Rewriting"
-    status: "planned"
-    tasks:
-      - id: "TASK-W05-D1"
-        title: "Implement QueryExpander using synonym networks and pseudo-relevance feedback"
-        status: "planned"
-      - id: "TASK-W05-D2"
-        title: "Implement HyDE (Hypothetical Document Embeddings) query generator"
-        status: "planned"
-      - id: "TASK-W05-D3"
-        title: "Build ContextCompressor pruning redundant sentences from retrieved chunks"
-        status: "planned"
-      - id: "TASK-W05-D4"
-        title: "Implement TokenBudgetManager optimizing prompt window limits"
-        status: "planned"
-      - id: "TASK-W05-D5"
-        title: "Integration tests for full query-to-context transformation pipeline"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 6: RAG Evaluation Suite
-  # -------------------------------------------------------------
-  - id: "M06"
-    name: "Week 6: Verifiable RAG Evaluation & Hallucination Metrics"
-    status: "planned"
-    tasks:
-      - id: "TASK-W06-D1"
-        title: "Implement NLI (Natural Language Inference) premise-hypothesis entailment checker"
-        status: "planned"
-      - id: "TASK-W06-D2"
-        title: "Implement ContextRelevanceMetric measuring noise ratio in retrieved chunks"
-        status: "planned"
-      - id: "TASK-W06-D3"
-        title: "Implement GroundednessEvaluator detecting unsupported claims in LLM outputs"
-        status: "planned"
-      - id: "TASK-W06-D4"
-        title: "Add automated evaluation dataset generator creating synthetic Q&A pairs"
-        status: "planned"
-      - id: "TASK-W06-D5"
-        title: "Comprehensive RAG metric validation and regression benchmark"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 7: External Vector Store Integrations
-  # -------------------------------------------------------------
-  - id: "M07"
-    name: "Week 7: Vector Database Connectors"
-    status: "planned"
-    tasks:
-      - id: "TASK-W07-D1"
-        title: "Implement QdrantVectorConnector with payload filtering and collection management"
-        status: "planned"
-      - id: "TASK-W07-D2"
-        title: "Implement ChromaVectorConnector for local embedded storage"
-        status: "planned"
-      - id: "TASK-W07-D3"
-        title: "Implement PGVectorConnector with PostgreSQL SQLAlchemy interface"
-        status: "planned"
-      - id: "TASK-W07-D4"
-        title: "Implement VectorStoreMigrationTool to transfer vectors between backends"
-        status: "planned"
-      - id: "TASK-W07-D5"
-        title: "Integration tests with mock containerized vector database instances"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 8: REST API & Async Ingestion Pipeline
-  # -------------------------------------------------------------
-  - id: "M08"
-    name: "Week 8: High-Throughput REST API"
-    status: "planned"
-    tasks:
-      - id: "TASK-W08-D1"
-        title: "Implement asynchronous multi-file upload endpoint with background worker queue"
-        status: "planned"
-      - id: "TASK-W08-D2"
-        title: "Implement Server-Sent Events (SSE) streaming search and generation endpoint"
-        status: "planned"
-      - id: "TASK-W08-D3"
-        title: "Add API Key authentication, rate limiting, and request throttling middleware"
-        status: "planned"
-      - id: "TASK-W08-D4"
-        title: "Implement telemetry middleware logging query latency, chunk counts, and hit rates"
-        status: "planned"
-      - id: "TASK-W08-D5"
-        title: "API contract tests and OpenAPI specification generation"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 9: Docker Containerization & Microservices
-  # -------------------------------------------------------------
-  - id: "M09"
-    name: "Week 9: Containerization & Deployment Infrastructure"
-    status: "planned"
-    tasks:
-      - id: "TASK-W09-D1"
-        title: "Create multi-stage Dockerfile with non-root security user and slim base"
-        status: "planned"
-      - id: "TASK-W09-D2"
-        title: "Create docker-compose.yml orchestrating API, Qdrant, and Redis cache"
-        status: "planned"
-      - id: "TASK-W09-D3"
-        title: "Add health check probes (/livez, /readyz) and graceful shutdown handlers"
-        status: "planned"
-      - id: "TASK-W09-D4"
-        title: "Write Kubernetes deployment manifests and Helm chart scaffolding"
-        status: "planned"
-      - id: "TASK-W09-D5"
-        title: "Automated container build and security vulnerability scan (Trivy)"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 10: CI/CD Automation & Quality Gates
-  # -------------------------------------------------------------
-  - id: "M10"
-    name: "Week 10: Continuous Integration & Delivery"
-    status: "planned"
-    tasks:
-      - id: "TASK-W10-D1"
-        title: "Create GitHub Actions workflow for linting (ruff, flake8) and type check (mypy)"
-        status: "planned"
-      - id: "TASK-W10-D2"
-        title: "Create automated multi-OS test matrix (Ubuntu, Windows, macOS) on Python 3.10-3.14"
-        status: "planned"
-      - id: "TASK-W10-D3"
-        title: "Add code coverage reporting with Codecov threshold enforcement (>90%)"
-        status: "planned"
-      - id: "TASK-W10-D4"
-        title: "Automate semantic release tagging and changelog generation"
-        status: "planned"
-      - id: "TASK-W10-D5"
-        title: "Build and verify PyPI wheel distribution package"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 11: Performance Optimization & Memory Profiling
-  # -------------------------------------------------------------
-  - id: "M11"
-    name: "Week 11: Profiling & Performance Tuning"
-    status: "planned"
-    tasks:
-      - id: "TASK-W11-D1"
-        title: "Profile memory allocation during 10,000 chunk indexing and eliminate leaks"
-        status: "planned"
-      - id: "TASK-W11-D2"
-        title: "Vector search latency optimization: implement SIMD dot products using numpy/c-types"
-        status: "planned"
-      - id: "TASK-W11-D3"
-        title: "BM25 inverted index compression using Elias-Fano and Varint encodings"
-        status: "planned"
-      - id: "TASK-W11-D4"
-        title: "Implement LRU query result caching with TTL invalidation"
-        status: "planned"
-      - id: "TASK-W11-D5"
-        title: "Comprehensive load testing with Locust simulating 100 concurrent search queries"
-        status: "planned"
-
-  # -------------------------------------------------------------
-  # WEEK 12: Documentation, Production Hardening & 1.0 Release
-  # -------------------------------------------------------------
-  - id: "M12"
-    name: "Week 12: Production Hardening & Community 1.0 Release"
-    status: "planned"
-    tasks:
-      - id: "TASK-W12-D1"
-        title: "Author interactive tutorial notebooks demonstrating end-to-end RAG workflows"
-        status: "planned"
-      - id: "TASK-W12-D2"
-        title: "Build documentation website using MkDocs Material with API reference"
-        status: "planned"
-      - id: "TASK-W12-D3"
-        title: "Conduct security audit, license compliance check, and dependency freeze"
-        status: "planned"
-      - id: "TASK-W12-D4"
-        title: "Publish public benchmark report comparing retrieval speed vs LangChain and LlamaIndex"
-        status: "planned"
-      - id: "TASK-W12-D5"
-        title: "Final 1.0.0 semantic release, GitHub Release notes, and transition to next project"
-        status: "planned"
+- id: M01
+  name: 'Week 1: Document Ingestion & Format Extractors'
+  status: in_progress
+  tasks:
+  - id: TASK-W01-D1
+    title: Initialize project structure, core Document models, and baseline parsers
+    status: done
+    completed_date: '2026-09-14'
+  - id: TASK-W01-D2
+    title: Implement MultiColumnPDFExtractor with layout detection and header/footer
+      stripping
+    status: done
+    completed_date: '2026-09-15'
+  - id: TASK-W01-D3
+    title: Implement HTMLParser and ePubExtractor with DOM hierarchy normalization
+    status: planned
+  - id: TASK-W01-D4
+    title: Build DocumentSanitizer with PII redaction (emails, phone numbers, API
+      keys)
+    status: planned
+  - id: TASK-W01-D5
+    title: Create IngestionBenchmark suite evaluating throughput on 100 sample documents
+    status: planned
+- id: M02
+  name: 'Week 2: Advanced Chunking & Hierarchy Preservation'
+  status: planned
+  tasks:
+  - id: TASK-W02-D1
+    title: Implement RecursiveCharacterChunker with hierarchy of separator patterns
+    status: planned
+  - id: TASK-W02-D2
+    title: Implement TableAwareChunker preserving Markdown and HTML tables intact
+    status: planned
+  - id: TASK-W02-D3
+    title: Implement CodeBlockChunker for mixed technical documentation and scripts
+    status: planned
+  - id: TASK-W02-D4
+    title: Add ContextualChunkEnricher injecting document title and section breadcrumbs
+    status: planned
+  - id: TASK-W02-D5
+    title: Unit tests and token distribution analyzer for all chunking strategies
+    status: planned
+- id: M03
+  name: 'Week 3: Dense Vector Embeddings & Storage'
+  status: planned
+  tasks:
+  - id: TASK-W03-D1
+    title: Abstract BaseEmbeddingProvider interface with batch encoding and caching
+    status: planned
+  - id: TASK-W03-D2
+    title: Implement FastEmbedLocalProvider for lightweight offline CPU embeddings
+    status: planned
+  - id: TASK-W03-D3
+    title: Implement persistent binary VectorStore with memory-mapped file storage
+    status: planned
+  - id: TASK-W03-D4
+    title: Implement cosine, euclidean, and dot product similarity kernels
+    status: planned
+  - id: TASK-W03-D5
+    title: Vector retrieval evaluation suite computing Mean Reciprocal Rank (MRR@10)
+    status: planned
+- id: M04
+  name: 'Week 4: BM25 Lexical Engine & Hybrid Search'
+  status: planned
+  tasks:
+  - id: TASK-W04-D1
+    title: Implement inverted index with Porter stemmer and domain stopword filters
+    status: planned
+  - id: TASK-W04-D2
+    title: Implement BM25+ and BM25L variants for short and long document normalization
+    status: planned
+  - id: TASK-W04-D3
+    title: Enhance Reciprocal Rank Fusion (RRF) with configurable dense/sparse weights
+    status: planned
+  - id: TASK-W04-D4
+    title: Implement CrossEncoderReRanker interface for contextual candidate re-scoring
+    status: planned
+  - id: TASK-W04-D5
+    title: 'Comparative benchmark: Dense vs BM25 vs Hybrid RRF on MS-MARCO sample'
+    status: planned
+- id: M05
+  name: 'Week 5: Context Assembly & Query Rewriting'
+  status: planned
+  tasks:
+  - id: TASK-W05-D1
+    title: Implement QueryExpander using synonym networks and pseudo-relevance feedback
+    status: planned
+  - id: TASK-W05-D2
+    title: Implement HyDE (Hypothetical Document Embeddings) query generator
+    status: planned
+  - id: TASK-W05-D3
+    title: Build ContextCompressor pruning redundant sentences from retrieved chunks
+    status: planned
+  - id: TASK-W05-D4
+    title: Implement TokenBudgetManager optimizing prompt window limits
+    status: planned
+  - id: TASK-W05-D5
+    title: Integration tests for full query-to-context transformation pipeline
+    status: planned
+- id: M06
+  name: 'Week 6: Verifiable RAG Evaluation & Hallucination Metrics'
+  status: planned
+  tasks:
+  - id: TASK-W06-D1
+    title: Implement NLI (Natural Language Inference) premise-hypothesis entailment
+      checker
+    status: planned
+  - id: TASK-W06-D2
+    title: Implement ContextRelevanceMetric measuring noise ratio in retrieved chunks
+    status: planned
+  - id: TASK-W06-D3
+    title: Implement GroundednessEvaluator detecting unsupported claims in LLM outputs
+    status: planned
+  - id: TASK-W06-D4
+    title: Add automated evaluation dataset generator creating synthetic Q&A pairs
+    status: planned
+  - id: TASK-W06-D5
+    title: Comprehensive RAG metric validation and regression benchmark
+    status: planned
+- id: M07
+  name: 'Week 7: Vector Database Connectors'
+  status: planned
+  tasks:
+  - id: TASK-W07-D1
+    title: Implement QdrantVectorConnector with payload filtering and collection management
+    status: planned
+  - id: TASK-W07-D2
+    title: Implement ChromaVectorConnector for local embedded storage
+    status: planned
+  - id: TASK-W07-D3
+    title: Implement PGVectorConnector with PostgreSQL SQLAlchemy interface
+    status: planned
+  - id: TASK-W07-D4
+    title: Implement VectorStoreMigrationTool to transfer vectors between backends
+    status: planned
+  - id: TASK-W07-D5
+    title: Integration tests with mock containerized vector database instances
+    status: planned
+- id: M08
+  name: 'Week 8: High-Throughput REST API'
+  status: planned
+  tasks:
+  - id: TASK-W08-D1
+    title: Implement asynchronous multi-file upload endpoint with background worker
+      queue
+    status: planned
+  - id: TASK-W08-D2
+    title: Implement Server-Sent Events (SSE) streaming search and generation endpoint
+    status: planned
+  - id: TASK-W08-D3
+    title: Add API Key authentication, rate limiting, and request throttling middleware
+    status: planned
+  - id: TASK-W08-D4
+    title: Implement telemetry middleware logging query latency, chunk counts, and
+      hit rates
+    status: planned
+  - id: TASK-W08-D5
+    title: API contract tests and OpenAPI specification generation
+    status: planned
+- id: M09
+  name: 'Week 9: Containerization & Deployment Infrastructure'
+  status: planned
+  tasks:
+  - id: TASK-W09-D1
+    title: Create multi-stage Dockerfile with non-root security user and slim base
+    status: planned
+  - id: TASK-W09-D2
+    title: Create docker-compose.yml orchestrating API, Qdrant, and Redis cache
+    status: planned
+  - id: TASK-W09-D3
+    title: Add health check probes (/livez, /readyz) and graceful shutdown handlers
+    status: planned
+  - id: TASK-W09-D4
+    title: Write Kubernetes deployment manifests and Helm chart scaffolding
+    status: planned
+  - id: TASK-W09-D5
+    title: Automated container build and security vulnerability scan (Trivy)
+    status: planned
+- id: M10
+  name: 'Week 10: Continuous Integration & Delivery'
+  status: planned
+  tasks:
+  - id: TASK-W10-D1
+    title: Create GitHub Actions workflow for linting (ruff, flake8) and type check
+      (mypy)
+    status: planned
+  - id: TASK-W10-D2
+    title: Create automated multi-OS test matrix (Ubuntu, Windows, macOS) on Python
+      3.10-3.14
+    status: planned
+  - id: TASK-W10-D3
+    title: Add code coverage reporting with Codecov threshold enforcement (>90%)
+    status: planned
+  - id: TASK-W10-D4
+    title: Automate semantic release tagging and changelog generation
+    status: planned
+  - id: TASK-W10-D5
+    title: Build and verify PyPI wheel distribution package
+    status: planned
+- id: M11
+  name: 'Week 11: Profiling & Performance Tuning'
+  status: planned
+  tasks:
+  - id: TASK-W11-D1
+    title: Profile memory allocation during 10,000 chunk indexing and eliminate leaks
+    status: planned
+  - id: TASK-W11-D2
+    title: 'Vector search latency optimization: implement SIMD dot products using
+      numpy/c-types'
+    status: planned
+  - id: TASK-W11-D3
+    title: BM25 inverted index compression using Elias-Fano and Varint encodings
+    status: planned
+  - id: TASK-W11-D4
+    title: Implement LRU query result caching with TTL invalidation
+    status: planned
+  - id: TASK-W11-D5
+    title: Comprehensive load testing with Locust simulating 100 concurrent search
+      queries
+    status: planned
+- id: M12
+  name: 'Week 12: Production Hardening & Community 1.0 Release'
+  status: planned
+  tasks:
+  - id: TASK-W12-D1
+    title: Author interactive tutorial notebooks demonstrating end-to-end RAG workflows
+    status: planned
+  - id: TASK-W12-D2
+    title: Build documentation website using MkDocs Material with API reference
+    status: planned
+  - id: TASK-W12-D3
+    title: Conduct security audit, license compliance check, and dependency freeze
+    status: planned
+  - id: TASK-W12-D4
+    title: Publish public benchmark report comparing retrieval speed vs LangChain
+      and LlamaIndex
+    status: planned
+  - id: TASK-W12-D5
+    title: Final 1.0.0 semantic release, GitHub Release notes, and transition to next
+      project
+    status: planned
