@@ -19,7 +19,8 @@ milestones:
     completed_date: '2026-09-15'
   - id: TASK-W01-D3
     title: Implement HTMLParser and ePubExtractor with DOM hierarchy normalization
-    status: planned
+    status: done
+    completed_date: '2026-09-16'
   - id: TASK-W01-D4
     title: Build DocumentSanitizer with PII redaction (emails, phone numbers, API
       keys)
