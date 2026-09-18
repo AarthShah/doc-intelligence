@@ -28,7 +28,8 @@ milestones:
     completed_date: '2026-09-17'
   - id: TASK-W01-D5
     title: Create IngestionBenchmark suite evaluating throughput on 100 sample documents
-    status: planned
+    status: done
+    completed_date: '2026-09-18'
 - id: M02
   name: 'Week 2: Advanced Chunking & Hierarchy Preservation'
   status: planned
