@@ -36,7 +36,8 @@ milestones:
   tasks:
   - id: TASK-W02-D1
     title: Implement RecursiveCharacterChunker with hierarchy of separator patterns
-    status: planned
+    status: done
+    completed_date: '2026-09-19'
   - id: TASK-W02-D2
     title: Implement TableAwareChunker preserving Markdown and HTML tables intact
     status: planned
