@@ -44,7 +44,8 @@ milestones:
     completed_date: '2026-09-20'
   - id: TASK-W02-D3
     title: Implement CodeBlockChunker for mixed technical documentation and scripts
-    status: planned
+    status: done
+    completed_date: '2026-09-21'
   - id: TASK-W02-D4
     title: Add ContextualChunkEnricher injecting document title and section breadcrumbs
     status: planned
