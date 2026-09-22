@@ -48,7 +48,8 @@ milestones:
     completed_date: '2026-09-21'
   - id: TASK-W02-D4
     title: Add ContextualChunkEnricher injecting document title and section breadcrumbs
-    status: planned
+    status: done
+    completed_date: '2026-09-22'
   - id: TASK-W02-D5
     title: Unit tests and token distribution analyzer for all chunking strategies
     status: planned
