@@ -52,7 +52,8 @@ milestones:
     completed_date: '2026-09-22'
   - id: TASK-W02-D5
     title: Unit tests and token distribution analyzer for all chunking strategies
-    status: planned
+    status: done
+    completed_date: '2026-09-23'
 - id: M03
   name: 'Week 3: Dense Vector Embeddings & Storage'
   status: planned
