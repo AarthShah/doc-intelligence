@@ -60,7 +60,8 @@ milestones:
   tasks:
   - id: TASK-W03-D1
     title: Abstract BaseEmbeddingProvider interface with batch encoding and caching
-    status: planned
+    status: done
+    completed_date: '2026-09-24'
   - id: TASK-W03-D2
     title: Implement FastEmbedLocalProvider for lightweight offline CPU embeddings
     status: planned
