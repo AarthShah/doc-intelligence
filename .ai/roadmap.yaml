@@ -68,7 +68,8 @@ milestones:
     completed_date: '2026-09-26'
   - id: TASK-W03-D3
     title: Implement persistent binary VectorStore with memory-mapped file storage
-    status: planned
+    status: done
+    completed_date: '2026-09-27'
   - id: TASK-W03-D4
     title: Implement cosine, euclidean, and dot product similarity kernels
     status: planned
