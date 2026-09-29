@@ -76,7 +76,8 @@ milestones:
     completed_date: '2026-09-28'
   - id: TASK-W03-D5
     title: Vector retrieval evaluation suite computing Mean Reciprocal Rank (MRR@10)
-    status: planned
+    status: done
+    completed_date: '2026-09-29'
 - id: M04
   name: 'Week 4: BM25 Lexical Engine & Hybrid Search'
   status: planned
