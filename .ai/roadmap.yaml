@@ -84,7 +84,8 @@ milestones:
   tasks:
   - id: TASK-W04-D1
     title: Implement inverted index with Porter stemmer and domain stopword filters
-    status: planned
+    status: done
+    completed_date: '2026-09-30'
   - id: TASK-W04-D2
     title: Implement BM25+ and BM25L variants for short and long document normalization
     status: planned
