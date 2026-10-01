@@ -88,7 +88,8 @@ milestones:
     completed_date: '2026-09-30'
   - id: TASK-W04-D2
     title: Implement BM25+ and BM25L variants for short and long document normalization
-    status: planned
+    status: done
+    completed_date: '2026-10-01'
   - id: TASK-W04-D3
     title: Enhance Reciprocal Rank Fusion (RRF) with configurable dense/sparse weights
     status: planned
