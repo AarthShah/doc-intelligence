@@ -92,7 +92,8 @@ milestones:
     completed_date: '2026-10-01'
   - id: TASK-W04-D3
     title: Enhance Reciprocal Rank Fusion (RRF) with configurable dense/sparse weights
-    status: planned
+    status: done
+    completed_date: '2026-10-02'
   - id: TASK-W04-D4
     title: Implement CrossEncoderReRanker interface for contextual candidate re-scoring
     status: planned
