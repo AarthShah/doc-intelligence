@@ -96,7 +96,8 @@ milestones:
     completed_date: '2026-10-02'
   - id: TASK-W04-D4
     title: Implement CrossEncoderReRanker interface for contextual candidate re-scoring
-    status: planned
+    status: done
+    completed_date: '2026-10-03'
   - id: TASK-W04-D5
     title: 'Comparative benchmark: Dense vs BM25 vs Hybrid RRF on MS-MARCO sample'
     status: planned
