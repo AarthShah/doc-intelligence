@@ -9,12 +9,19 @@ import uuid
 @dataclass
 class DocumentMetadata:
     """Document provenance and extraction metadata."""
-    source_name: str
-    format: str
+    source_name: str = ""
+    format: str = "plaintext"
     author: Optional[str] = None
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     page_count: int = 1
     custom: Dict[str, Any] = field(default_factory=dict)
+    source: Optional[str] = None
+
+    def __post_init__(self):
+        if self.source and not self.source_name:
+            self.source_name = self.source
+        elif self.source_name and not self.source:
+            self.source = self.source_name
 
 
 @dataclass
@@ -23,6 +30,10 @@ class Document:
     text: str
     metadata: DocumentMetadata
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
+
+    @property
+    def content(self) -> str:
+        return self.text
 
 
 @dataclass
