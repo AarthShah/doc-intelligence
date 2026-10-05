@@ -100,7 +100,8 @@ milestones:
     completed_date: '2026-10-03'
   - id: TASK-W04-D5
     title: 'Comparative benchmark: Dense vs BM25 vs Hybrid RRF on MS-MARCO sample'
-    status: planned
+    status: done
+    completed_date: '2026-10-05'
 - id: M05
   name: 'Week 5: Context Assembly & Query Rewriting'
   status: planned
