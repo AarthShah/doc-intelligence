@@ -1,7 +1,14 @@
 import zipfile
 from typing import List, Dict
 
-from ebooklib import epub
+# The `ebooklib` package provides EPUB parsing utilities. It is an optional
+# dependency for the ePub ingestion feature. Import it lazily so that the rest
+# of the library (e.g., PDF extraction) can be used without requiring the
+# package to be installed.
+try:
+    from ebooklib import epub  # type: ignore
+except Exception:  # pragma: no cover
+    epub = None
 
 from .html_parser import HTMLParser
 
@@ -10,7 +17,21 @@ class EpubExtractor:
     """Extracts structured text from an EPUB file."""
 
     def __init__(self, file_path: str):
+        """
+        Initialize the extractor.
+
+        Parameters
+        ----------
+        file_path: str
+            Path to the EPUB file to be processed.
+        """
+        if epub is None:
+            raise ImportError(
+                "The 'ebooklib' package is required for EpubExtractor but is not installed. "
+                "Install it with `pip install ebooklib`."
+            )
         self.file_path = file_path
+        self._parser = HTMLParser()
         self._parser = HTMLParser()
 
     def extract(self) -> List[Dict[str, str]]:
