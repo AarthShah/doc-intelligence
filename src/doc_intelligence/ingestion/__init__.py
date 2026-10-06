@@ -3,5 +3,6 @@
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.ingestion.markdown_parser import MarkdownParser
 from src.doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor, TextBlock
+from doc_intelligence.ingestion.html_parser import HTMLParser
 
-__all__ = ["TextParser", "MarkdownParser", "MultiColumnPDFExtractor", "TextBlock"]
+__all__ = ["TextParser", "MarkdownParser", "MultiColumnPDFExtractor", "TextBlock", "HTMLParser"]
