@@ -23,6 +23,7 @@ classifiers = [
 ]
 dependencies = [
     "pyyaml>=6.0",
+    "ebooklib>=0.18",
 ]
 
 [project.optional-dependencies]

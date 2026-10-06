@@ -128,6 +128,48 @@ print("Hallucination Risk:", report.hallucination_score)
 
 ---
 
+## 8. ePub Extraction Example
+
+```python
+from doc_intelligence.ingestion.epub_extractor import EpubExtractor
+from doc_intelligence.chunking.semantic_chunker import SemanticChunker
+from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
+
+# Extract ePub document
+extractor = EpubExtractor("path/to/book.epub")
+document = extractor.extract()
+print(f"Title: {document.title}")
+
+# Chunk and index
+chunker = SemanticChunker(max_chunk_size=200)
+chunks = chunker.chunk(document)
+retriever = HybridRetriever()
+retriever.index(chunks)
+
+print("ePub indexed successfully.")
+```
+
+### FastAPI endpoint
+
+```python
+from fastapi import FastAPI, UploadFile, File
+from doc_intelligence.ingestion.epub_extractor import EpubExtractor
+from doc_intelligence.chunking.semantic_chunker import SemanticChunker
+from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
+
+app = FastAPI()
+retriever = HybridRetriever()
+
+@app.post("/ingest/epub")
+def ingest_epub(file: UploadFile = File(...)):
+    extractor = EpubExtractor(file.file)
+    document = extractor.extract()
+    chunker = SemanticChunker()
+    chunks = chunker.chunk(document)
+    retriever.index(chunks)
+    return {"message": "ePub ingested and indexed"}
+```
+
 ## 8. API Reference
 
 Start the REST API server:
