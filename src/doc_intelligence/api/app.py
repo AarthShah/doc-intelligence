@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 
 try:
-    from fastapi import FastAPI, HTTPException
+    from fastapi import FastAPI, HTTPException, UploadFile, File
     from pydantic import BaseModel, Field
     FASTAPI_AVAILABLE = True
 except ImportError:
@@ -16,6 +16,7 @@ from doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
+from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 
 # Global retriever & evaluator instances for the service
 retriever = HybridRetriever()
@@ -98,6 +99,28 @@ if FASTAPI_AVAILABLE:
             "hallucination_score": report.hallucination_score,
             "details": report.details,
         }
+
+@app.post("/ingest/epub")
+async def ingest_epub(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """Ingest an EPUB file, extract its sections, and return them as JSON."""
+    import tempfile, os
+    from pathlib import Path
+
+    # Save uploaded file to a temporary location
+    suffix = Path(file.filename).suffix if file.filename else ".epub"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        content = await file.read()
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        extractor = EpubExtractor(tmp_path)
+        sections = extractor.extract()
+    finally:
+        # Clean up the temporary file
+        os.remove(tmp_path)
+
+    return {"sections": sections}
 
 else:
     # Minimal fallback mock object if FastAPI is not installed
