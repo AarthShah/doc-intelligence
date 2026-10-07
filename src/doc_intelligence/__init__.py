@@ -8,6 +8,7 @@ from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
+from doc_intelligence.sanitizer import DocumentSanitizer
 
 __all__ = [
     "Document",
@@ -18,4 +19,5 @@ __all__ = [
     "SemanticChunker",
     "HybridRetriever",
     "RAGEvaluator",
+    "DocumentSanitizer",
 ]
