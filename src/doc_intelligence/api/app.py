@@ -17,6 +17,7 @@ from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
+from doc_intelligence.sanitizer import DocumentSanitizer
 
 # Global retriever & evaluator instances for the service
 retriever = HybridRetriever()
@@ -55,9 +56,10 @@ if FASTAPI_AVAILABLE:
             "indexed_chunks": retriever.vector_store.count,
         }
 
-    @app.post("/ingest")
-    def ingest_document(req: IngestRequest) -> Dict[str, Any]:
-        doc = parser.parse(req.text, source_name=req.source_name)
+    @app.post("/ingest/text")
+    def ingest_document(req: IngestRequest, redact_pii: bool = False) -> Dict[str, Any]:
+        sanitizer = DocumentSanitizer() if redact_pii else None
+        doc = parser.parse(req.text, source_name=req.source_name, sanitizer=sanitizer)
         chunks = chunker.chunk(doc)
         retriever.index(chunks)
         return {
@@ -100,27 +102,27 @@ if FASTAPI_AVAILABLE:
             "details": report.details,
         }
 
-@app.post("/ingest/epub")
-async def ingest_epub(file: UploadFile = File(...)) -> Dict[str, Any]:
-    """Ingest an EPUB file, extract its sections, and return them as JSON."""
-    import tempfile, os
-    from pathlib import Path
+    @app.post("/ingest/epub")
+    async def ingest_epub(file: UploadFile = File(...)) -> Dict[str, Any]:
+        """Ingest an EPUB file, extract its sections, and return them as JSON."""
+        import tempfile, os
+        from pathlib import Path
 
-    # Save uploaded file to a temporary location
-    suffix = Path(file.filename).suffix if file.filename else ".epub"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        content = await file.read()
-        tmp.write(content)
-        tmp_path = tmp.name
+        # Save uploaded file to a temporary location
+        suffix = Path(file.filename).suffix if file.filename else ".epub"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            content = await file.read()
+            tmp.write(content)
+            tmp_path = tmp.name
 
-    try:
-        extractor = EpubExtractor(tmp_path)
-        sections = extractor.extract()
-    finally:
-        # Clean up the temporary file
-        os.remove(tmp_path)
+        try:
+            extractor = EpubExtractor(tmp_path)
+            sections = extractor.extract()
+        finally:
+            # Clean up the temporary file
+            os.remove(tmp_path)
 
-    return {"sections": sections}
+        return {"sections": sections}
 
 else:
     # Minimal fallback mock object if FastAPI is not installed
