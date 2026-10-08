@@ -23,6 +23,12 @@ class IngestionBenchmark(unittest.TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.metrics: Dict[str, Any] = {}
+        self._temp_dir = tempfile.TemporaryDirectory()
+        self.temp_dir_path = Path(self._temp_dir.name)
+
+    def tearDown(self) -> None:
+        self._temp_dir.cleanup()
+        super().tearDown()
 
     def time_operation(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> tuple[Any, float]:
         """Execute a function and measure its execution time in seconds."""
