@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional
 import io
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor
+from doc_intelligence.ingestion.text_parser import DocumentSanitizer
 from doc_intelligence.ingestion.html_parser import HTMLParser
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 
@@ -46,6 +47,29 @@ class IngestionBenchmark(unittest.TestCase):
     def record_metric(self, name: str, value: Any) -> None:
         """Record a benchmark metric."""
         self.metrics[name] = value
+
+    def test_document_sanitizer_pii_redaction_benchmark(self) -> None:
+        """Benchmark DocumentSanitizer PII redaction throughput overhead."""
+        sanitizer = DocumentSanitizer()
+        line_count = 2000
+        content = "\n".join([
+            f"User {i} with email user{i}@example.com and phone 555-01{i:02d} contacted support."
+            for i in range(line_count)
+        ])
+
+        start_time = time.perf_counter()
+        sanitized_content = sanitizer.sanitize(content)
+        duration = time.perf_counter() - start_time
+
+        throughput = self.calculate_throughput(line_count, duration)
+
+        self.record_metric("document_sanitizer_duration_seconds", duration)
+        self.record_metric("document_sanitizer_throughput_lines_per_sec", throughput)
+        self.record_metric("document_sanitizer_line_count", line_count)
+
+        self.assertIsNotNone(sanitized_content)
+        self.assertNotIn("@example.com", sanitized_content)
+        self.assertGreater(duration, 0.0)
 
     def test_text_parser_ingestion_benchmark(self) -> None:
         """Benchmark TextParser ingestion throughput with a large text file."""
