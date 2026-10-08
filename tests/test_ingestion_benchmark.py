@@ -3,7 +3,9 @@ import unittest
 from pathlib import Path
 import tempfile
 from typing import Any, Callable, Dict, List, Optional
+import io
 from doc_intelligence.ingestion.text_parser import TextParser
+from doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor
 
 
 class IngestionBenchmark(unittest.TestCase):
@@ -54,3 +56,28 @@ class IngestionBenchmark(unittest.TestCase):
             self.assertIsNotNone(doc)
             self.assertEqual(doc.metadata.source_name, "large_benchmark_document.txt")
             self.assertGreater(duration, 0.0)
+
+    def test_pdf_extractor_ingestion_benchmark(self) -> None:
+        """Benchmark MultiColumnPDFExtractor ingestion throughput."""
+        extractor = MultiColumnPDFExtractor()
+        # Minimal valid PDF content to satisfy PDFMiner
+        pdf_content = (
+            b"%PDF-1.0\n"
+            b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
+            b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
+            b"3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << >> /MediaBox [0 0 612 792] >>\nendobj\n"
+            b"trailer\n<< /Root 1 0 R >>\n%%EOF"
+        )
+        pdf_stream = io.BytesIO(pdf_content)
+        
+        # Time the parse operation
+        doc, duration = self.time_operation(extractor.parse, pdf_stream, source_name="benchmark_doc.pdf")
+
+        # Calculate throughput
+        throughput = self.calculate_throughput(1, duration)
+
+        self.record_metric("pdf_extractor_duration_seconds", duration)
+        self.record_metric("pdf_extractor_throughput_docs_per_sec", throughput)
+
+        self.assertIsNotNone(doc)
+        self.assertGreater(duration, 0.0)
