@@ -48,7 +48,7 @@ class IngestionBenchmark(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = Path(tmpdir) / "large_benchmark_document.txt"
-            generate_large_text_file(file_path, line_count)
+            generate_large_text_file(file_path, line_count=line_count)
 
             # Time the parse operation
             doc, duration = self.time_operation(parser.parse, file_path, source_name="benchmark_doc")
