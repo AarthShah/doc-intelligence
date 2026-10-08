@@ -10,6 +10,13 @@ from doc_intelligence.ingestion.html_parser import HTMLParser
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 
 
+def generate_large_text_file(file_path: Path, line_count: int = 5000) -> Path:
+    """Generate a temporary text file with a specified number of lines for benchmarking."""
+    content = "\n".join([f"This is line number {i} containing some sample text for benchmarking ingestion performance." for i in range(line_count)])
+    file_path.write_text(content, encoding="utf-8")
+    return file_path
+
+
 class IngestionBenchmark(unittest.TestCase):
     """Base benchmark suite for evaluating ingestion throughput and accuracy."""
 
@@ -37,13 +44,11 @@ class IngestionBenchmark(unittest.TestCase):
     def test_text_parser_ingestion_benchmark(self) -> None:
         """Benchmark TextParser ingestion throughput with a large text file."""
         parser = TextParser()
-        # Generate a sufficiently large text file for meaningful benchmarking
         line_count = 5000
-        content = "\n".join([f"This is line number {i} containing some sample text for benchmarking ingestion performance." for i in range(line_count)])
 
         with tempfile.TemporaryDirectory() as tmpdir:
             file_path = Path(tmpdir) / "large_benchmark_document.txt"
-            file_path.write_text(content, encoding="utf-8")
+            generate_large_text_file(file_path, line_count)
 
             # Time the parse operation
             doc, duration = self.time_operation(parser.parse, file_path, source_name="benchmark_doc")
