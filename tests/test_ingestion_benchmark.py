@@ -6,6 +6,7 @@ from typing import Any, Callable, Dict, List, Optional
 import io
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor
+from doc_intelligence.ingestion.html_parser import HTMLParser
 
 
 class IngestionBenchmark(unittest.TestCase):
@@ -80,4 +81,29 @@ class IngestionBenchmark(unittest.TestCase):
         self.record_metric("pdf_extractor_throughput_docs_per_sec", throughput)
 
         self.assertIsNotNone(doc)
+        self.assertGreater(duration, 0.0)
+
+    def test_html_parser_ingestion_benchmark(self) -> None:
+        """Benchmark HTMLParser ingestion throughput with multiple HTML documents."""
+        parser = HTMLParser()
+        doc_count = 50
+        html_contents = [
+            f"<html><head><title>Doc {i}</title></head><body><script>var x = 1;</script><style>body {{ color: red; }}</style><h1>Heading {i}</h1><p>This is paragraph content for HTML benchmark document number {i}.</p></body></html>"
+            for i in range(doc_count)
+        ]
+
+        start_time = time.perf_counter()
+        parsed_docs = [parser.parse(html) for html in html_contents]
+        duration = time.perf_counter() - start_time
+
+        throughput = self.calculate_throughput(doc_count, duration)
+
+        self.record_metric("html_parser_duration_seconds", duration)
+        self.record_metric("html_parser_throughput_docs_per_sec", throughput)
+        self.record_metric("html_parser_doc_count", doc_count)
+
+        self.assertEqual(len(parsed_docs), doc_count)
+        for doc in parsed_docs:
+            self.assertIsNotNone(doc)
+            self.assertIn("paragraph content", doc.content)
         self.assertGreater(duration, 0.0)

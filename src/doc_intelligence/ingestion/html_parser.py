@@ -1,3 +1,7 @@
+from pathlib import Path
+from typing import List, Union
+from doc_intelligence.models import Document, DocumentMetadata
+
 # Attempt to import BeautifulSoup; if unavailable, fall back to a minimal parser.
 try:
     from bs4 import BeautifulSoup
@@ -23,6 +27,9 @@ except ImportError:  # pragma: no cover
             # Allows the object to be called like BeautifulSoup(html, "html.parser")
             return self
 
+        def __iter__(self):
+            return iter([])
+
         def find_all(self, tags):
             # Return a list containing a single element representing the whole document.
             return [self]
@@ -34,29 +41,37 @@ except ImportError:  # pragma: no cover
             return text
 
     BeautifulSoup = _FallbackSoup
-from typing import List
 
 
 class HTMLParser:
-    """Parse HTML content into clean, normalized plain text."""
+    """Parse HTML content into clean, normalized Document representations."""
 
-    def parse(self, html: str) -> str:
+    def parse(self, content_or_path: Union[str, Path], source_name: str = "document.html") -> Document:
         """
-        Convert an HTML document to plain text.
+        Convert an HTML document or string to a normalized Document.
 
         Steps:
-        1. Parse the HTML with BeautifulSoup.
-        2. Remove ``script`` and ``style`` elements.
-        3. Extract text from block‑level elements (headings, paragraphs, list items).
-        4. Normalize whitespace and join blocks with line breaks.
+        1. Read content if a path is provided, otherwise use the string.
+        2. Parse the HTML with BeautifulSoup.
+        3. Remove ``script`` and ``style`` elements.
+        4. Extract text from block-level elements (headings, paragraphs, list items).
+        5. Normalize whitespace and join blocks with line breaks.
 
         Args:
-            html: Raw HTML string.
+            content_or_path: Raw HTML string or Path to an HTML file.
+            source_name: Name of the source.
 
         Returns:
-            Normalized plain‑text representation of the HTML.
+            Normalized Document representation.
         """
-        soup = BeautifulSoup(html, "html.parser")
+        if isinstance(content_or_path, Path):
+            html_content = content_or_path.read_text(encoding="utf-8")
+            source = str(content_or_path)
+        else:
+            html_content = content_or_path
+            source = source_name
+
+        soup = BeautifulSoup(html_content, "html.parser")
 
         # Remove script and style tags
         for tag in soup(["script", "style"]):
@@ -72,5 +87,12 @@ class HTMLParser:
             if text:
                 blocks.append(text)
 
-        # Join blocks with a newline to preserve a readable structure
-        return "\n".join(blocks)
+        extracted_text = "\n".join(blocks)
+
+        metadata = DocumentMetadata(
+            source=source,
+            source_name=source_name,
+            format="html",
+            custom={},
+        )
+        return Document(text=extracted_text, metadata=metadata)
