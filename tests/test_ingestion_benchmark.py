@@ -7,6 +7,7 @@ import io
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor
 from doc_intelligence.ingestion.html_parser import HTMLParser
+from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 
 
 class IngestionBenchmark(unittest.TestCase):
@@ -107,3 +108,47 @@ class IngestionBenchmark(unittest.TestCase):
             self.assertIsNotNone(doc)
             self.assertIn("paragraph content", doc.content)
         self.assertGreater(duration, 0.0)
+
+    def test_epub_extractor_ingestion_benchmark(self) -> None:
+        """Benchmark EPubExtractor ingestion throughput with a collection of ePub files."""
+        try:
+            from doc_intelligence.ingestion.epub_extractor import EpubExtractor
+        except ImportError:
+            self.skipTest("ebooklib is not installed")
+
+        doc_count = 10
+        import zipfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            file_paths = []
+            for i in range(doc_count):
+                file_path = Path(tmpdir) / f"benchmark_{i}.epub"
+                with zipfile.ZipFile(file_path, "w") as zf:
+                    zf.writestr("mimetype", "application/epub+zip")
+                    zf.writestr("META-INF/container.xml", '<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>')
+                    zf.writestr("OEBPS/content.opf", '<?xml version="1.0"?><package><manifest><item id="chap1" href="chap1.xhtml" media-type="application/xhtml+xml"/></manifest><spine><itemref idref="chap1"/></spine></package>')
+                    zf.writestr("OEBPS/chap1.xhtml", f'<html><body><h1>Chapter {i}</h1><p>This is ePub benchmark content for document number {i}.</p></body></html>')
+                file_paths.append(file_path)
+
+            start_time = time.perf_counter()
+            parsed_results = []
+            for path in file_paths:
+                try:
+                    extractor = EpubExtractor(str(path))
+                except ImportError:
+                    self.skipTest("ebooklib is not installed")
+                parsed_results.append(extractor.extract())
+            duration = time.perf_counter() - start_time
+
+            throughput = self.calculate_throughput(doc_count, duration)
+
+            self.record_metric("epub_extractor_duration_seconds", duration)
+            self.record_metric("epub_extractor_throughput_docs_per_sec", throughput)
+            self.record_metric("epub_extractor_doc_count", doc_count)
+
+            self.assertEqual(len(parsed_results), doc_count)
+            for res in parsed_results:
+                self.assertIsInstance(res, list)
+                self.assertGreater(len(res), 0)
+                self.assertIn("ePub benchmark content", res[0]["text"])
+            self.assertGreater(duration, 0.0)

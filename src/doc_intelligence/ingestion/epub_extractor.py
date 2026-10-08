@@ -32,7 +32,6 @@ class EpubExtractor:
             )
         self.file_path = file_path
         self._parser = HTMLParser()
-        self._parser = HTMLParser()
 
     def extract(self) -> List[Dict[str, str]]:
         """Parse the EPUB and return a list of dictionaries with keys
