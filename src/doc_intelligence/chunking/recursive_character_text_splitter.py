@@ -48,6 +48,10 @@ class RecursiveCharacterTextSplitter:
         Returns:
             A list of text chunks.
         """
+        # If the text is empty, return an empty list.
+        if not text:
+            return []
+
         # If the text is already small enough, return it as a single chunk.
         if len(text) <= self.chunk_size:
             return [text]
@@ -85,6 +89,8 @@ class RecursiveCharacterTextSplitter:
 
     def _split_with_separators(self, text: str, separator: str) -> List[str]:
         """Splits a text chunk by a given separator, filtering out empty strings."""
+        if separator == "":
+            return list(text)
         return [chunk for chunk in text.split(separator) if chunk]
 
     def _split_into_smaller_chunks(
