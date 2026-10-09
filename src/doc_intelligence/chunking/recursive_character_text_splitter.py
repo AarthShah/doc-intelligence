@@ -54,7 +54,7 @@ class RecursiveCharacterTextSplitter:
 
         # Try splitting by the defined separators, from longest to shortest
         for separator in self.separators:
-            potential_chunks = text.split(separator)
+            potential_chunks = self._split_with_separators(text, separator)
 
             # If splitting by this separator resulted in more than one chunk,
             # check if any of these chunks are larger than chunk_size.
@@ -79,6 +79,11 @@ class RecursiveCharacterTextSplitter:
         # fall back to splitting by characters to ensure progress.
         return self._split_into_smaller_chunks(text, self.chunk_size)
 
+    def _split_with_separators(self, text: str, separator: str) -> List[str]:
+        """
+        Splits a text chunk by a given separator.
+        """
+        return [chunk for chunk in text.split(separator) if chunk]
 
     def _split_into_smaller_chunks(
         self, text: str, target_size: int
