@@ -54,53 +54,29 @@ class RecursiveCharacterTextSplitter:
 
         # Try splitting by the defined separators, from longest to shortest
         for separator in self.separators:
-            if separator == "":  # Avoid infinite loop if empty string is the only separator
-                continue
-            
             potential_chunks = text.split(separator)
 
-            # If splitting by this separator results in more than one chunk
-            # and at least one of those chunks is larger than chunk_size,
-            # then recursively split those larger chunks.
+            # If splitting by this separator resulted in more than one chunk,
+            # check if any of these chunks are larger than chunk_size.
             if len(potential_chunks) > 1:
-                # Check if any of the split parts are larger than chunk_size
+                # If any chunk is too large, recursively split it further.
                 if any(len(chunk) > self.chunk_size for chunk in potential_chunks):
-                    # Recursively split each chunk that is too large
-                    # We need to ensure that the separator is re-added for context if we split it
-                    # However, split() removes the separator.
-                    # A better approach is to find the first occurrence of the separator
-                    # and split there, then recursively call on the parts.
-                    
-                    # Find the first occurrence of the separator
-                    split_index = text.find(separator)
-                    if split_index != -1:
-                        left_part = text[:split_index]
-                        right_part = text[split_index + len(separator):]
-                        
-                        # Recursively split the left and right parts
-                        # Need to be careful about re-adding the separator if it's part of the chunk_overlap
-                        # For now, let's focus on the recursive split logic.
-                        # The _split_into_smaller_chunks method is for direct splitting.
-                        
-                        # Let's refine the recursive call to handle potential_chunks
-                        processed_chunks = []
-                        for chunk in potential_chunks:
-                            if len(chunk) > self.chunk_size:
-                                # If a chunk is still too large, split it further
-                                processed_chunks.extend(self.split_text(chunk))
-                            else:
-                                processed_chunks.append(chunk)
-                        
-                        # Filter out any empty strings that might result from splitting
-                        return [c for c in processed_chunks if c]
+                    processed_chunks = []
+                    for chunk in potential_chunks:
+                        if len(chunk) > self.chunk_size:
+                            # Recursively split the chunk if it's too large
+                            processed_chunks.extend(self.split_text(chunk))
+                        else:
+                            processed_chunks.append(chunk)
+                    # Filter out any empty strings that might result from splitting
+                    return [c for c in processed_chunks if c]
                 else:
-                    # If all potential chunks are within chunk_size, return them.
-                    # Overlap will be handled in a separate pass or by a different mechanism.
+                    # If all chunks are within chunk_size, return them.
+                    # Overlap is handled in the chunking method, not here.
                     return potential_chunks
         
         # If no separator was found or if separators did not help to reduce chunk size,
         # fall back to splitting by characters to ensure progress.
-        # This is a last resort.
         return self._split_into_smaller_chunks(text, self.chunk_size)
 
 
