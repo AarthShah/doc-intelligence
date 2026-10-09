@@ -29,6 +29,24 @@ Building production Retrieval-Augmented Generation (RAG) systems presents steep 
 
 ---
 
+## 4. Recursive Character Chunking Example
+
+```python
+from doc_intelligence.chunking.recursive_character_text_splitter import RecursiveCharacterTextSplitter
+
+# 1. Initialize splitter with chunk size and overlap
+splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=20)
+
+# 2. Split text hierarchically
+text = "Deep learning models require clean training data. RAG systems reduce hallucinations by grounding generation in retrieved documents."
+chunks = splitter.split_text(text)
+
+for i, chunk in enumerate(chunks):
+    print(f"Chunk {i}: {chunk}")
+```
+
+---
+
 ## 4. Features
 
 - **📄 Multimodal Document Ingestion**: Structured extractors for Plaintext, Markdown headers/tables, and PDF documents.
