@@ -35,8 +35,13 @@ class QueryExpander:
         Returns:
             The expanded query.
         """
-        # Placeholder for synonym expansion logic
-        return query
+        expanded_query = query
+        words = query.split()
+        for word in words:
+            if word in self.synonym_network:
+                synonyms = self.synonym_network[word]
+                expanded_query += " " + " ".join(synonyms)
+        return expanded_query
 
     def expand_query_prf(self, query: str) -> str:
         """
