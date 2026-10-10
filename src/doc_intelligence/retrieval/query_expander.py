@@ -7,7 +7,11 @@ from src.doc_intelligence.models import Chunk
 
 class QueryExpander:
     """
-    Expands queries using synonym networks and pseudo-relevance feedback.
+    Expands queries using synonym networks and pseudo-relevance feedback (PRF).
+
+    This class enhances search queries by augmenting original terms with synonyms from
+    a provided synonym dictionary and extracting relevant keywords from top retrieved
+    documents using TF-IDF-based pseudo-relevance feedback.
     """
 
     def __init__(
@@ -16,11 +20,11 @@ class QueryExpander:
         pseudo_relevance_feedback_docs: Optional[List[Chunk]] = None,
     ):
         """
-        Initializes the QueryExpander.
+        Initializes the QueryExpander with an optional synonym network and PRF documents.
 
         Args:
-            synonym_network: A dictionary representing the synonym network.
-            pseudo_relevance_feedback_docs: A list of Chunks to use for PRF.
+            synonym_network: A dictionary mapping search terms to lists of synonymous terms.
+            pseudo_relevance_feedback_docs: A list of Chunk objects or text documents used for PRF extraction.
         """
         self.synonym_network = synonym_network if synonym_network is not None else {}
         self.pseudo_relevance_feedback_docs = (
@@ -29,14 +33,17 @@ class QueryExpander:
 
     def expand_query_synonyms(self, query: str, max_synonyms: Optional[int] = None) -> List[str]:
         """
-        Expands the query using the synonym network.
+        Expands a query string using the configured synonym network.
+
+        Identifies matches for terms or sub-phrases within the query against the synonym dictionary
+        and appends corresponding synonyms up to the specified maximum limit.
 
         Args:
-            query: The original query.
-            max_synonyms: Maximum number of synonyms to add per matched term.
+            query: The original search query string.
+            max_synonyms: The maximum total number of synonyms to add during expansion.
 
         Returns:
-            A list of query terms including expanded synonyms.
+            A list of query terms containing both original words and expanded synonyms.
         """
         terms = query.split()
         if not self.synonym_network:
@@ -88,17 +95,19 @@ class QueryExpander:
 
     def expand_query_prf(self, query: Any, docs: Optional[List[Any]] = None, top_k: int = 10, top_k_keywords: Optional[int] = None) -> List[str]:
         """
-        Expands the query using pseudo-relevance feedback.
+        Expands query terms using pseudo-relevance feedback (PRF).
 
-        Identifies common keywords from PRF documents to enhance the query.
+        Analyzes a set of reference documents using a TF-IDF-like scoring mechanism to extract
+        the most salient informative keywords, appending them to the existing query terms.
 
         Args:
-            query: The original query (str or list of terms).
-            docs: Optional list of documents (Chunks or strings) to use for PRF.
-            top_k: Number of keywords to add.
+            query: The original query, provided as a string, a list of terms, or other iterable.
+            docs: An optional list of document chunks or strings to use for PRF instead of default docs.
+            top_k: The default maximum number of keywords to extract and add.
+            top_k_keywords: An explicit override for the maximum number of keywords to add.
 
         Returns:
-            A list of query terms including PRF keywords.
+            A list of query terms augmented with extracted PRF keywords.
         """
         if isinstance(query, str):
             terms = self.expand_query_synonyms(query)
