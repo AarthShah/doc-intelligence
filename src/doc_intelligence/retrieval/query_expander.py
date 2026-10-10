@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import List, Optional
+from typing import Any, List, Optional
 import re
 
 from src.doc_intelligence.models import Chunk
@@ -27,7 +27,7 @@ class QueryExpander:
             pseudo_relevance_feedback_docs if pseudo_relevance_feedback_docs is not None else []
         )
 
-    def expand_query_synonyms(self, query: str) -> str:
+    def expand_query_synonyms(self, query: str) -> List[str]:
         """
         Expands the query using the synonym network.
 
@@ -35,68 +35,110 @@ class QueryExpander:
             query: The original query.
 
         Returns:
-            The expanded query.
+            A list of query terms including expanded synonyms.
         """
-        expanded_query = query
-        words = query.split()
-        for word in words:
-            if word in self.synonym_network:
-                synonyms = self.synonym_network[word]
-                expanded_query += " " + " ".join(synonyms)
-        return expanded_query
+        terms = query.split()
+        if not self.synonym_network:
+            return terms
 
-    def expand_query_prf(self, query: str) -> str:
+        added_terms = []
+        query_lower = query.lower()
+
+        for key, synonyms in self.synonym_network.items():
+            if key.lower() in query_lower:
+                for syn in synonyms:
+                    if syn not in terms and syn not in added_terms:
+                        added_terms.append(syn)
+
+        for word in terms:
+            matched_key = None
+            if word in self.synonym_network:
+                matched_key = word
+            else:
+                for k in self.synonym_network:
+                    if k.lower() == word.lower():
+                        matched_key = k
+                        break
+            if matched_key is not None:
+                synonyms = self.synonym_network[matched_key]
+                for syn in synonyms:
+                    if syn not in terms and syn not in added_terms:
+                        added_terms.append(syn)
+
+        return terms + added_terms
+
+    def expand_query_prf(self, query: Any, docs: Optional[List[Any]] = None, top_k: int = 10) -> List[str]:
         """
         Expands the query using pseudo-relevance feedback.
 
         Identifies common keywords from PRF documents to enhance the query.
 
         Args:
-            query: The original query.
+            query: The original query (str or list of terms).
+            docs: Optional list of documents (Chunks or strings) to use for PRF.
+            top_k: Number of keywords to add.
 
         Returns:
-            The expanded query with added keywords.
+            A list of query terms including PRF keywords.
         """
-        if not self.pseudo_relevance_feedback_docs:
-            return query
+        if isinstance(query, str):
+            terms = self.expand_query_synonyms(query)
+        elif isinstance(query, list):
+            terms = list(query)
+        else:
+            terms = query.split() if query else []
 
-        # Simple tokenizer: split by non-alphanumeric characters
+        feedback_docs = docs if docs is not None else self.pseudo_relevance_feedback_docs
+        if not feedback_docs:
+            return terms
+
         def tokenize(text: str) -> List[str]:
             return re.findall(r'\b\w+\b', text.lower())
 
-        # Common English stop words (a small subset for demonstration)
         stop_words = set([
-            "a", "an", "the", "in", "on", "at", "to", "for", "of", "it", "is", "and", "or", "i", "you", "he", "she", "they", "we", "me", "him", "her", "them", "us", "my", "your", "his", "its", "their", "our", "with", "by", "from", "about", "as", "be", "was", "were", "been", "are", "has", "had", "do", "does", "did", "will", "would", "should", "can", "could", "not", "no", "very", "so", "just"
+            "a", "an", "the", "in", "on", "at", "to", "for", "of", "it", "is", "and", "or", "i", "you", "he", "she", "they", "we", "me", "him", "her", "them", "us", "my", "your", "his", "its", "their", "our", "with", "by", "from", "about", "as", "be", "was", "were", "been", "are", "has", "had", "do", "does", "did", "will", "would", "should", "can", "could", "not", "no", "very", "so", "just", "this", "that", "these", "those"
         ])
 
         all_words = []
-        for chunk in self.pseudo_relevance_feedback_docs:
-            all_words.extend(tokenize(chunk.content))
+        for doc in feedback_docs:
+            content = doc.content if hasattr(doc, "content") else str(doc)
+            all_words.extend(tokenize(content))
 
         word_counts = Counter(all_words)
+        original_query_words = {t.lower() for t in terms}
+        # Also include individual words from multi-word terms to avoid duplicating them
+        for t in terms:
+            for w in tokenize(t):
+                original_query_words.add(w)
 
-        # Get the most common words, excluding stop words and words from the original query
-        original_query_words = set(tokenize(query))
-        num_keywords_to_add = 3  # Number of keywords to add
         expanded_query_terms = []
 
         for word, count in word_counts.most_common():
-            if word not in stop_words and word not in original_query_words:
+            if word not in stop_words and word not in original_query_words and word not in terms:
                 expanded_query_terms.append(word)
-                if len(expanded_query_terms) >= num_keywords_to_add:
+                original_query_words.add(word)
+                if len(expanded_query_terms) >= top_k:
                     break
 
-        return query + " " + " ".join(expanded_query_terms)
+        return terms + expanded_query_terms
 
-    def combined_expand(self, query: str) -> str:
+    def combined_expand(self, query: str, docs: Optional[List[Any]] = None, use_synonyms: bool = True, use_prf: bool = True, top_k: int = 10) -> List[str]:
         """
         Expands the query using both synonym network and pseudo-relevance feedback sequentially.
 
         Args:
             query: The original query.
+            docs: Optional list of documents for PRF.
+            use_synonyms: Whether to apply synonym expansion.
+            use_prf: Whether to apply PRF expansion.
+            top_k: Number of keywords to add for PRF.
 
         Returns:
-            The fully expanded query.
+            A list of fully expanded query terms.
         """
-        synonym_expanded = self.expand_query_synonyms(query)
-        return self.expand_query_prf(synonym_expanded)
+        terms = query.split()
+        if use_synonyms:
+            terms = self.expand_query_synonyms(query)
+        if use_prf:
+            terms = self.expand_query_prf(terms, docs=docs, top_k=top_k)
+        return terms
