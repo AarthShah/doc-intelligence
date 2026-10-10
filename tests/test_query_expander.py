@@ -161,6 +161,26 @@ class TestQueryExpander(unittest.TestCase):
         self.assertIn("virtualization", result_str)
         self.assertIn("distributed", result_str)
 
+    def test_expand_query_synonyms_max_synonyms(self):
+        synonyms = {"search": ["find", "lookup", "discover", "explore"]}
+        expander = QueryExpander(synonym_network=synonyms)
+        query = "search data"
+        result = expander.expand_query_synonyms(query, max_synonyms=2)
+        # Original query terms ("search", "data") plus at most 2 synonyms
+        synonyms_found = [term for term in result if term in ["find", "lookup", "discover", "explore"]]
+        self.assertLessEqual(len(synonyms_found), 2)
+
+    def test_expand_query_prf_top_k_keywords(self):
+        expander = QueryExpander()
+        query = "data"
+        mock_docs = [
+            "Data analysis involves statistics, probability, and machine learning models.",
+        ]
+        result = expander.expand_query_prf(query, mock_docs, top_k=2)
+        # Query terms ("data") plus at most 2 keywords from PRF
+        prf_keywords = [term for term in result if term != "data"]
+        self.assertLessEqual(len(prf_keywords), 2)
+
     def test_combined_expand_explicit_parameters(self):
         synonyms = {"security": ["protection", "safety"]}
         expander = QueryExpander(synonym_network=synonyms)

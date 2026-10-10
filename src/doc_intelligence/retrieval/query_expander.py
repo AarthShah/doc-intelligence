@@ -44,11 +44,11 @@ class QueryExpander:
 
         added_terms = []
         query_lower = query.lower()
+        syn_count = 0
 
         for key, synonyms in self.synonym_network.items():
             try:
                 if key.lower() in query_lower:
-                    syn_count = 0
                     for syn in synonyms:
                         if max_synonyms is not None and syn_count >= max_synonyms:
                             break
@@ -57,28 +57,32 @@ class QueryExpander:
                             syn_count += 1
             except Exception:
                 continue
+            if max_synonyms is not None and syn_count >= max_synonyms:
+                break
 
-        for word in terms:
-            matched_key = None
-            if word in self.synonym_network:
-                matched_key = word
-            else:
-                for k in self.synonym_network:
-                    try:
-                        if k.lower() == word.lower():
-                            matched_key = k
+        if max_synonyms is None or syn_count < max_synonyms:
+            for word in terms:
+                matched_key = None
+                if word in self.synonym_network:
+                    matched_key = word
+                else:
+                    for k in self.synonym_network:
+                        try:
+                            if k.lower() == word.lower():
+                                matched_key = k
+                                break
+                        except Exception:
+                            continue
+                if matched_key is not None:
+                    synonyms = self.synonym_network[matched_key]
+                    for syn in synonyms:
+                        if max_synonyms is not None and syn_count >= max_synonyms:
                             break
-                    except Exception:
-                        continue
-            if matched_key is not None:
-                synonyms = self.synonym_network[matched_key]
-                syn_count = 0
-                for syn in synonyms:
-                    if max_synonyms is not None and syn_count >= max_synonyms:
-                        break
-                    if syn not in terms and syn not in added_terms:
-                        added_terms.append(syn)
-                        syn_count += 1
+                        if syn not in terms and syn not in added_terms:
+                            added_terms.append(syn)
+                            syn_count += 1
+                if max_synonyms is not None and syn_count >= max_synonyms:
+                    break
 
         return terms + added_terms
 
