@@ -45,10 +45,13 @@ class QueryExpander:
         query_lower = query.lower()
 
         for key, synonyms in self.synonym_network.items():
-            if key.lower() in query_lower:
-                for syn in synonyms:
-                    if syn not in terms and syn not in added_terms:
-                        added_terms.append(syn)
+            try:
+                if key.lower() in query_lower:
+                    for syn in synonyms:
+                        if syn not in terms and syn not in added_terms:
+                            added_terms.append(syn)
+            except Exception:
+                continue
 
         for word in terms:
             matched_key = None
@@ -56,9 +59,12 @@ class QueryExpander:
                 matched_key = word
             else:
                 for k in self.synonym_network:
-                    if k.lower() == word.lower():
-                        matched_key = k
-                        break
+                    try:
+                        if k.lower() == word.lower():
+                            matched_key = k
+                            break
+                    except Exception:
+                        continue
             if matched_key is not None:
                 synonyms = self.synonym_network[matched_key]
                 for syn in synonyms:
@@ -99,22 +105,43 @@ class QueryExpander:
             "a", "an", "the", "in", "on", "at", "to", "for", "of", "it", "is", "and", "or", "i", "you", "he", "she", "they", "we", "me", "him", "her", "them", "us", "my", "your", "his", "its", "their", "our", "with", "by", "from", "about", "as", "be", "was", "were", "been", "are", "has", "had", "do", "does", "did", "will", "would", "should", "can", "could", "not", "no", "very", "so", "just", "this", "that", "these", "those"
         ])
 
-        all_words = []
+        doc_tokens_list = []
         for doc in feedback_docs:
             content = doc.content if hasattr(doc, "content") else str(doc)
-            all_words.extend(tokenize(content))
+            tokens = [t for t in tokenize(content) if t not in stop_words and len(t) > 1]
+            doc_tokens_list.append(tokens)
 
-        word_counts = Counter(all_words)
+        if not doc_tokens_list:
+            return terms
+
+        # Compute TF-IDF-like keyword scoring across PRF documents
+        num_docs = len(doc_tokens_list)
+        df = Counter()
+        tf_list = []
+        for tokens in doc_tokens_list:
+            tf = Counter(tokens)
+            tf_list.append(tf)
+            for word in tf.keys():
+                df[word] += 1
+
+        import math
+        keyword_scores = Counter()
+        for tf in tf_list:
+            doc_len = sum(tf.values()) or 1
+            for word, freq in tf.items():
+                if df[word] > 0:
+                    tf_val = freq / doc_len
+                    idf_val = math.log(1.0 + (num_docs / df[word]))
+                    keyword_scores[word] += tf_val * idf_val
+
         original_query_words = {t.lower() for t in terms}
-        # Also include individual words from multi-word terms to avoid duplicating them
         for t in terms:
             for w in tokenize(t):
                 original_query_words.add(w)
 
         expanded_query_terms = []
-
-        for word, count in word_counts.most_common():
-            if word not in stop_words and word not in original_query_words and word not in terms:
+        for word, score in keyword_scores.most_common():
+            if word not in original_query_words and word not in terms:
                 expanded_query_terms.append(word)
                 original_query_words.add(word)
                 if len(expanded_query_terms) >= top_k:
