@@ -87,3 +87,16 @@ class QueryExpander:
                     break
 
         return query + " " + " ".join(expanded_query_terms)
+
+    def combined_expand(self, query: str) -> str:
+        """
+        Expands the query using both synonym network and pseudo-relevance feedback sequentially.
+
+        Args:
+            query: The original query.
+
+        Returns:
+            The fully expanded query.
+        """
+        synonym_expanded = self.expand_query_synonyms(query)
+        return self.expand_query_prf(synonym_expanded)
