@@ -27,12 +27,13 @@ class QueryExpander:
             pseudo_relevance_feedback_docs if pseudo_relevance_feedback_docs is not None else []
         )
 
-    def expand_query_synonyms(self, query: str) -> List[str]:
+    def expand_query_synonyms(self, query: str, max_synonyms: Optional[int] = None) -> List[str]:
         """
         Expands the query using the synonym network.
 
         Args:
             query: The original query.
+            max_synonyms: Maximum number of synonyms to add per matched term.
 
         Returns:
             A list of query terms including expanded synonyms.
@@ -47,9 +48,13 @@ class QueryExpander:
         for key, synonyms in self.synonym_network.items():
             try:
                 if key.lower() in query_lower:
+                    syn_count = 0
                     for syn in synonyms:
+                        if max_synonyms is not None and syn_count >= max_synonyms:
+                            break
                         if syn not in terms and syn not in added_terms:
                             added_terms.append(syn)
+                            syn_count += 1
             except Exception:
                 continue
 
@@ -67,13 +72,17 @@ class QueryExpander:
                         continue
             if matched_key is not None:
                 synonyms = self.synonym_network[matched_key]
+                syn_count = 0
                 for syn in synonyms:
+                    if max_synonyms is not None and syn_count >= max_synonyms:
+                        break
                     if syn not in terms and syn not in added_terms:
                         added_terms.append(syn)
+                        syn_count += 1
 
         return terms + added_terms
 
-    def expand_query_prf(self, query: Any, docs: Optional[List[Any]] = None, top_k: int = 10) -> List[str]:
+    def expand_query_prf(self, query: Any, docs: Optional[List[Any]] = None, top_k: int = 10, top_k_keywords: Optional[int] = None) -> List[str]:
         """
         Expands the query using pseudo-relevance feedback.
 
@@ -139,17 +148,28 @@ class QueryExpander:
             for w in tokenize(t):
                 original_query_words.add(w)
 
+        limit = top_k_keywords if top_k_keywords is not None else top_k
+
         expanded_query_terms = []
         for word, score in keyword_scores.most_common():
             if word not in original_query_words and word not in terms:
                 expanded_query_terms.append(word)
                 original_query_words.add(word)
-                if len(expanded_query_terms) >= top_k:
+                if len(expanded_query_terms) >= limit:
                     break
 
         return terms + expanded_query_terms
 
-    def combined_expand(self, query: str, docs: Optional[List[Any]] = None, use_synonyms: bool = True, use_prf: bool = True, top_k: int = 10) -> List[str]:
+    def combined_expand(
+        self,
+        query: str,
+        docs: Optional[List[Any]] = None,
+        use_synonyms: bool = True,
+        use_prf: bool = True,
+        top_k: int = 10,
+        max_synonyms: Optional[int] = None,
+        top_k_keywords: Optional[int] = None,
+    ) -> List[str]:
         """
         Expands the query using both synonym network and pseudo-relevance feedback sequentially.
 
@@ -159,13 +179,15 @@ class QueryExpander:
             use_synonyms: Whether to apply synonym expansion.
             use_prf: Whether to apply PRF expansion.
             top_k: Number of keywords to add for PRF.
+            max_synonyms: Maximum number of synonyms to add per matched term.
+            top_k_keywords: Control number of keywords extracted for PRF.
 
         Returns:
             A list of fully expanded query terms.
         """
         terms = query.split()
         if use_synonyms:
-            terms = self.expand_query_synonyms(query)
+            terms = self.expand_query_synonyms(query, max_synonyms=max_synonyms)
         if use_prf:
-            terms = self.expand_query_prf(terms, docs=docs, top_k=top_k)
+            terms = self.expand_query_prf(terms, docs=docs, top_k=top_k, top_k_keywords=top_k_keywords)
         return terms
