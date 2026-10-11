@@ -7,6 +7,13 @@ from typing import List, Optional
 #         # Implementation to call an LLM API
 #         pass
 
+PROMPT_TEMPLATE = """
+Given the following query, generate a hypothetical document that answers it.
+Query: "{query}"
+Hypothetical Document:
+"""
+
+
 class HyDEGenerator:
     """
     Generates hypothetical documents based on a query using an LLM.
