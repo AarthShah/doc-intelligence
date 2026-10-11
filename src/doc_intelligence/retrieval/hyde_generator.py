@@ -33,7 +33,7 @@ class HyDEGenerator:
     def __init__(
         self,
         llm_client: object,  # Use duck typing as LLMClient is hypothetical
-        prompt_template: Optional[str] = None,
+        prompt_template: Optional[str] = PROMPT_TEMPLATE,
     ):
         """
         Initializes the HyDEGenerator.
@@ -130,7 +130,7 @@ class HyDEGenerator:
     def __init__(
         self,
         llm_client: object,  # Use duck typing as LLMClient is hypothetical
-        prompt_template: Optional[str] = None,
+        prompt_template: Optional[str] = PROMPT_TEMPLATE,
     ):
         """
         Initializes the HyDEGenerator.
