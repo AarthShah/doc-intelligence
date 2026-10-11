@@ -25,6 +25,10 @@ class HyDEGenerator:
     hypothetically relevant to a given query. This hypothetical document
     can then be embedded and used for retrieval, potentially improving
     search results by bridging the gap between query and document embeddings.
+
+    Attributes:
+        llm_client (object): An instance of an LLM client providing a ``generate`` method.
+        prompt_template (str): The template string used to format prompts for the LLM.
     """
 
     DEFAULT_PROMPT_TEMPLATE = """
@@ -42,10 +46,13 @@ class HyDEGenerator:
         Initializes the HyDEGenerator.
 
         Args:
-            llm_client: An instance of an LLM client capable of generating text.
-            prompt_template: An optional custom prompt template. If not provided,
-                             a default template is used. The template must contain
-                             the placeholder "{query}".
+            llm_client (object): An instance of an LLM client capable of generating text.
+                Must implement a callable ``generate(prompt: str) -> str`` method.
+            prompt_template (Optional[str]): An optional custom prompt template. If not provided,
+                a default template is used. The template must contain the placeholder "{query}".
+
+        Raises:
+            TypeError: If ``llm_client`` does not have a callable ``generate`` method.
         """
         if not hasattr(llm_client, "generate") or not callable(getattr(llm_client, "generate")):
             raise TypeError("llm_client must have a callable 'generate' method.")
@@ -58,14 +65,16 @@ class HyDEGenerator:
         Generates a hypothetical document for the given query.
 
         Args:
-            query: The input query string.
+            query (str): The input query string for which to generate a hypothetical document.
 
         Returns:
-            A string representing the generated hypothetical document.
+            str: A stripped string representing the generated hypothetical document.
 
         Raises:
-            ValueError: If the prompt template is invalid or if the LLM fails
-                        to generate a response.
+            ValueError: If the prompt template does not contain the ``{query}`` placeholder,
+                or if the LLM client encounters a connection/timeout error or fails to generate
+                a valid response.
+            TypeError: If the LLM client response is not a string.
         """
         if "{query}" not in self.prompt_template:
             raise ValueError("Prompt template must contain the '{query}' placeholder.")
@@ -93,14 +102,14 @@ class HyDEGenerator:
         """
         Generates a hypothetical document for the given query.
 
-        This is a convenience method that calls
-        `generate_hypothetical_document`.
+        This is a convenience method that delegates directly to
+        ``generate_hypothetical_document``.
 
         Args:
-            query: The input query string.
+            query (str): The input query string.
 
         Returns:
-            A string representing the generated hypothetical document.
+            str: A string representing the generated hypothetical document.
 
         Raises:
             ValueError: If the prompt template is invalid or if the LLM fails
