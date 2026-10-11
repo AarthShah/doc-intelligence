@@ -1,4 +1,7 @@
+import logging
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 # Assume LLMClient is defined elsewhere and has a method like generate(prompt: str) -> str
 # For example:
@@ -71,12 +74,20 @@ class HyDEGenerator:
 
         try:
             hypothetical_doc = self.llm_client.generate(formatted_prompt)
+            if not isinstance(hypothetical_doc, str):
+                raise TypeError("LLM client response must be a string.")
+        except (ConnectionError, TimeoutError) as e:
+            logger.error("Connection or timeout error while generating hypothetical document for query '%s': %s", query, e)
+            raise ValueError(f"LLM service connection/timeout error for query: '{query}'.") from e
         except Exception as e:
-            # Log the exception here if logging is configured
+            logger.error("Failed to generate hypothetical document for query '%s': %s", query, e)
             raise ValueError(f"Failed to generate hypothetical document for query: '{query}'. Error: {e}") from e
 
         # Basic cleaning: remove leading/trailing whitespace
-        return hypothetical_doc.strip()
+        cleaned_doc = hypothetical_doc.strip()
+        if not cleaned_doc:
+            logger.warning("Generated hypothetical document was empty for query '%s'.", query)
+        return cleaned_doc
 
     def generate(self, query: str) -> str:
         """
@@ -95,7 +106,11 @@ class HyDEGenerator:
             ValueError: If the prompt template is invalid or if the LLM fails
                         to generate a response.
         """
-        return self.generate_hypothetical_document(query)
+        try:
+            return self.generate_hypothetical_document(query)
+        except Exception as e:
+            logger.error("Error in generate convenience method for query '%s': %s", query, e)
+            raise
 
 # Example usage (assuming LLMClient is defined and instantiated)
 # llm = LLMClient(...)
