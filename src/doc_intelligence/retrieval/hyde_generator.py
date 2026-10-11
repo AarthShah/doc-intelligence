@@ -71,6 +71,25 @@ class HyDEGenerator:
         # Basic cleaning: remove leading/trailing whitespace
         return hypothetical_doc.strip()
 
+    def generate(self, query: str) -> str:
+        """
+        Generates a hypothetical document for the given query.
+
+        This is a convenience method that calls
+        `generate_hypothetical_document`.
+
+        Args:
+            query: The input query string.
+
+        Returns:
+            A string representing the generated hypothetical document.
+
+        Raises:
+            ValueError: If the prompt template is invalid or if the LLM fails
+                        to generate a response.
+        """
+        return self.generate_hypothetical_document(query)
+
 # Example usage (assuming LLMClient is defined and instantiated)
 # llm = LLMClient(...)
 # hyde_generator = HyDEGenerator(llm_client=llm)
