@@ -146,6 +146,23 @@ print("Hallucination Risk:", report.hallucination_score)
 
 ---
 
+## 7.5. Context Compression Example
+
+```python
+from doc_intelligence.retrieval.context_compressor import ContextCompressor
+
+# 1. Initialize context compressor with similarity threshold
+compressor = ContextCompressor(similarity_threshold=0.85)
+
+# 2. Compress retrieved context to prune redundant or low-relevance sentences
+context_text = "Deep learning models require clean training data. Clean training data is essential for accurate models. RAG systems reduce hallucinations."
+compressed_context = compressor.compress(query="How to improve model accuracy?", context=context_text)
+
+print("Compressed Context:", compressed_context)
+```
+
+---
+
 ## 8. ePub Extraction Example
 
 ```python
