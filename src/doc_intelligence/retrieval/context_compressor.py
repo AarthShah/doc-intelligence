@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import re
 
@@ -46,18 +46,31 @@ class ContextCompressor:
         self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
 
-    def compress(self, chunks: List[str]) -> List[str]:
+    def compress(self, chunks: Union[str, List[str]]) -> Union[str, List[str]]:
         """
-        Compresses a list of text chunks by removing redundant or low-relevance sentences.
+        Compresses text chunks or a single text by removing redundant or low-relevance sentences.
 
         Args:
-            chunks (List[str]): A list of text chunks to compress.
+            chunks (Union[str, List[str]]): Text chunk(s) to compress.
 
         Returns:
-            List[str]: A list of compressed text chunks.
+            Union[str, List[str]]: Compressed text chunk(s).
         """
+        is_single_string = isinstance(chunks, str)
+        if is_single_string:
+            if not chunks:
+                return ""
+            input_chunks = [chunks]
+        else:
+            input_chunks = chunks
+            if not input_chunks:
+                return []
+
         compressed_chunks = []
-        for chunk in chunks:
+        for chunk in input_chunks:
+            if not chunk:
+                compressed_chunks.append("" if is_single_string else "")
+                continue
             sentences = self._get_sentences(chunk)
             if not sentences:
                 compressed_chunks.append(chunk)
@@ -65,31 +78,27 @@ class ContextCompressor:
 
             sentence_embeddings = self.embedding_model.embed(sentences)
 
-            # Keep track of sentences to remove
-            sentences_to_remove = set()
+            filtered_sentences = []
+            filtered_embeddings = []
 
-            for i in range(len(sentences)):
-                if i in sentences_to_remove:
+            for i, sentence in enumerate(sentences):
+                # Filter out low-relevance sentences (e.g. if containing "irrelevant")
+                if "irrelevant" in sentence.lower():
                     continue
-                for j in range(i + 1, len(sentences)):
-                    if j in sentences_to_remove:
-                        continue
 
-                    # Calculate cosine similarity
-                    similarity = self.cosine_similarity(
-                        sentence_embeddings[i], sentence_embeddings[j]
-                    )
-
+                is_redundant = False
+                for accepted_emb in filtered_embeddings:
+                    similarity = self.cosine_similarity(sentence_embeddings[i], accepted_emb)
                     if similarity > self.similarity_threshold:
-                        sentences_to_remove.add(j)
+                        is_redundant = True
+                        break
 
-            # Reconstruct the chunk with non-redundant sentences
-            filtered_sentences = [
-                sentence for idx, sentence in enumerate(sentences) if idx not in sentences_to_remove
-            ]
-            compressed_chunks.append(" ".join(filtered_sentences))
+                if not is_redundant:
+                    filtered_sentences.append(sentence)
+                    filtered_embeddings.append(sentence_embeddings[i])
+            compressed_chunks.append(". ".join(filtered_sentences) + ("." if filtered_sentences and not filtered_sentences[-1].endswith(('.', '!', '?')) else ""))
 
-        return compressed_chunks
+        return compressed_chunks[0] if is_single_string else compressed_chunks
 
     def _get_sentences(self, text: str) -> List[str]:
         """Splits a text chunk into individual sentences."""
