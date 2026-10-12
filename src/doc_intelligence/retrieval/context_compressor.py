@@ -20,41 +20,36 @@ except ImportError:
 
 class ContextCompressor:
     """
-    Compresses context by pruning redundant or low-relevance sentences.
+    Compresses context by pruning redundant or low-relevance sentences from text chunks.
 
-    This class aims to reduce the amount of text passed to an LLM by identifying
-    and removing sentences that are either highly similar to others already present
-    or deemed less relevant based on a similarity threshold.
+    This class reduces the token count of retrieved context before passing it to an LLM
+    by filtering out sentences that are redundant (exceeding a cosine similarity threshold)
+    or deemed low-relevance.
 
     Attributes:
-        embedding_model: An object that provides an embed method to generate
-                         vector embeddings for text.
-        similarity_threshold (float): The threshold for sentence similarity.
-                                      Sentences with similarity above this
-                                      value might be considered redundant.
+        embedding_model (object): Model providing an `embed` method for generating text embeddings.
+        similarity_threshold (float): Cosine similarity cutoff above which sentences are treated as redundant.
     """
     def __init__(self, embedding_model, similarity_threshold: float = 0.85):
         """
-        Initializes the ContextCompressor.
+        Initializes the ContextCompressor with an embedding model and a similarity threshold.
 
         Args:
-            embedding_model: The model used for generating text embeddings.
-                             Expected to have an `embed` method.
-            similarity_threshold (float): The threshold for sentence similarity.
-                                          Defaults to 0.85.
+            embedding_model (object): The model used to compute vector embeddings for sentences.
+            similarity_threshold (float, optional): The threshold for sentence redundancy. Defaults to 0.85.
         """
         self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
 
     def compress(self, chunks: Union[str, List[str]]) -> Union[str, List[str]]:
         """
-        Compresses text chunks or a single text by removing redundant or low-relevance sentences.
+        Compresses a single text string or a list of text chunks by removing redundant and low-relevance sentences.
 
         Args:
-            chunks (Union[str, List[str]]): Text chunk(s) to compress.
+            chunks (Union[str, List[str]]): A text string or a list of text strings to compress.
 
         Returns:
-            Union[str, List[str]]: Compressed text chunk(s).
+            Union[str, List[str]]: The compressed text string or list of compressed text strings.
         """
         is_single_string = isinstance(chunks, str)
         if is_single_string:
@@ -101,7 +96,15 @@ class ContextCompressor:
         return compressed_chunks[0] if is_single_string else compressed_chunks
 
     def _get_sentences(self, text: str) -> List[str]:
-        """Splits a text chunk into individual sentences."""
+        """
+        Splits a text chunk into individual sentences using NLTK sentence tokenization or a regex fallback.
+
+        Args:
+            text (str): The text chunk to split.
+
+        Returns:
+            List[str]: A list of extracted sentence strings.
+        """
         return sent_tokenize(text)
 
     def cosine_similarity(self, vec_a: List[float], vec_b: List[float]) -> float:
