@@ -14,21 +14,15 @@ class TokenBudgetManager:
         """Return the number of tokens in the given text using the tokenizer."""
         return len(self.tokenizer(text))
 
-    def _truncate_to_budget(self, text: str, remaining_tokens: int) -> str:
-        """Truncate a single text so that its token count does not exceed remaining_tokens."""
-        tokens = self.tokenizer(text)
-        if len(tokens) <= remaining_tokens:
-            return text
-        if remaining_tokens <= 0:
+    def _truncate_to_budget(self, text: str, remaining: int) -> str:
+        """Truncate a single text so that its token count does not exceed remaining tokens."""
+        if remaining <= 0:
             return ""
-        # Assuming tokenizer returns a list of token strings or objects that can be joined or sliced
-        # If tokenizer returns strings, joining them back or slicing list depending on tokenizer behavior.
-        # Typically tokenizers return List[str] or List[int]. Since tokenizer signature is Callable[[str], List[str]]:
-        truncated_tokens = tokens[:remaining_tokens]
-        # If tokens are string representations, we can join them or if they are words/characters.
-        # Let's check how other parts handle it or join with empty string or space if needed.
-        # Usually joining with empty or space depends on token type, but joining with empty string is standard for subword tokenizers.
-        return "".join(truncated_tokens)
+        tokens = self.tokenizer(text)
+        if len(tokens) <= remaining:
+            return text
+        truncated_tokens = tokens[:remaining]
+        return " ".join(truncated_tokens)
 
     def truncate(self, texts: List[str]) -> List[str]:
         """Iteratively adds texts while total token count <= max_tokens, truncating the last text if necessary."""
