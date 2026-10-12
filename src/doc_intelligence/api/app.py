@@ -16,6 +16,7 @@ from doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
+from doc_intelligence.retrieval.context_compressor import ContextCompressor
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 from doc_intelligence.sanitizer import DocumentSanitizer
 
@@ -24,6 +25,7 @@ retriever = HybridRetriever()
 evaluator = RAGEvaluator()
 parser = TextParser()
 chunker = SemanticChunker(max_chunk_size=300)
+context_compressor = ContextCompressor()
 
 
 if FASTAPI_AVAILABLE:
@@ -41,6 +43,7 @@ if FASTAPI_AVAILABLE:
     class QueryRequest(BaseModel):
         query: str
         top_k: int = 5
+        compress_context: bool = False
 
     class EvaluateRequest(BaseModel):
         query: str
@@ -72,18 +75,21 @@ if FASTAPI_AVAILABLE:
     @app.post("/query")
     def search_documents(req: QueryRequest) -> Dict[str, Any]:
         results = retriever.search(req.query, top_k=req.top_k)
+        formatted_results = []
+        for r in results:
+            text = r.chunk.text
+            if req.compress_context:
+                text = context_compressor.compress(req.query, text)
+            formatted_results.append({
+                "text": text,
+                "score": r.score,
+                "chunk_id": r.chunk.id,
+                "method": r.retrieval_method,
+            })
         return {
             "query": req.query,
             "results_count": len(results),
-            "results": [
-                {
-                    "text": r.chunk.text,
-                    "score": r.score,
-                    "chunk_id": r.chunk.id,
-                    "method": r.retrieval_method,
-                }
-                for r in results
-            ],
+            "results": formatted_results,
         }
 
     @app.post("/evaluate")
