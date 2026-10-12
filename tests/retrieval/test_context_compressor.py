@@ -76,3 +76,23 @@ def test_context_compressor_compress_single_sentence():
     text = "This is a single sentence."
     compressed_text = compressor.compress(text)
     assert compressed_text == text.strip()
+
+def test_context_compressor_compress_all_unique_sentences():
+    embedding_model = DummyEmbeddingModel()
+
+    class MockContextCompressor(ContextCompressor):
+        def _get_sentences(self, text: str) -> List[str]:
+            return [s.strip() for s in text.split('.') if s.strip()]
+
+        def cosine_similarity(self, vec_a: List[float], vec_b: List[float]) -> float:
+            # All sentences are distinct enough not to exceed the threshold
+            return 0.1
+
+    compressor = MockContextCompressor(embedding_model=embedding_model, similarity_threshold=0.85)
+    text = "First unique sentence. Second unique sentence. Third unique sentence."
+    compressed_text = compressor.compress(text)
+
+    expected_sentences = ["First unique sentence", "Second unique sentence", "Third unique sentence"]
+    actual_sentences = [s.strip() for s in compressed_text.split('.') if s.strip()]
+
+    assert actual_sentences == expected_sentences
