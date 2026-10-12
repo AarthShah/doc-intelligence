@@ -49,17 +49,9 @@ class ContextCompressor:
         """
         compressed_chunks = []
         for chunk in chunks:
-            # In a real implementation, this would involve:
-            # 1. Splitting the chunk into sentences.
-            # 2. Embedding each sentence.
-            # 3. Calculating pairwise similarities.
-            # 4. Identifying and removing redundant/low-relevance sentences.
-            # For this initial step, we'll return the chunk as is.
-            compressed_chunks.append(chunk)
-        compressed_chunks = []
-        for chunk in chunks:
             sentences = sent_tokenize(chunk)
             if not sentences:
+                compressed_chunks.append(chunk)
                 continue
 
             sentence_embeddings = self.embedding_model.embed(sentences)
