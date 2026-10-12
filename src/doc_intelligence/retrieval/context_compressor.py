@@ -49,7 +49,7 @@ class ContextCompressor:
         """
         compressed_chunks = []
         for chunk in chunks:
-            sentences = sent_tokenize(chunk)
+            sentences = self._get_sentences(chunk)
             if not sentences:
                 compressed_chunks.append(chunk)
                 continue
