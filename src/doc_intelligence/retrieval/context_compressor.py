@@ -1,13 +1,22 @@
 from typing import List, Optional
 
-import nltk
-from nltk.tokenize import sent_tokenize
+import re
 
-# Ensure the punkt tokenizer is downloaded
 try:
-    nltk.data.find('tokenizers/punkt')
-except nltk.downloader.DownloadError:
-    nltk.download('punkt')
+    import nltk
+    from nltk.tokenize import sent_tokenize
+
+    # Ensure the punkt tokenizer is downloaded
+    try:
+        nltk.data.find('tokenizers/punkt')
+    except (nltk.downloader.DownloadError, LookupError):
+        nltk.download('punkt')
+except ImportError:
+    nltk = None
+    def sent_tokenize(text: str) -> List[str]:
+        # Fallback simple sentence splitting using regex
+        sentences = re.split(r'(?<=[.!?])\s+', text)
+        return [s.strip() for s in sentences if s.strip()]
 
 class ContextCompressor:
     """
