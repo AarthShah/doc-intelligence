@@ -163,6 +163,27 @@ print("Compressed Context:", compressed_context)
 
 ---
 
+## 7.6. Token Budget Management Example
+
+```python
+from doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
+
+# 1. Initialize token budget manager with maximum tokens and a tokenizer function
+budget_manager = TokenBudgetManager(max_tokens=25, tokenizer=lambda text: text.split())
+
+# 2. Truncate context texts to fit within the specified token budget
+texts = [
+    "Deep learning models require clean training data.",
+    "RAG systems reduce hallucinations effectively."
+]
+fitting_texts = budget_manager.truncate(texts)
+
+for i, text in enumerate(fitting_texts):
+    print(f"Text {i}: {text}")
+```
+
+---
+
 ## 8. ePub Extraction Example
 
 ```python
