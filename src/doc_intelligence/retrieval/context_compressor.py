@@ -82,6 +82,10 @@ class ContextCompressor:
 
         return compressed_chunks
 
+    def _get_sentences(self, text: str) -> List[str]:
+        """Splits a text chunk into individual sentences."""
+        return sent_tokenize(text)
+
     def cosine_similarity(self, vec_a: List[float], vec_b: List[float]) -> float:
         """Calculates the cosine similarity between two vectors."""
         dot_product = sum(a * b for a, b in zip(vec_a, vec_b))
