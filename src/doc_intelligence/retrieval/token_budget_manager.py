@@ -104,3 +104,9 @@ class TokenBudgetManager:
                 break
 
         return result
+
+    def manage_budget(self, texts: List[str]) -> List[str]:
+        """
+        Alias for truncate to manage the token budget for a list of texts.
+        """
+        return self.truncate(texts)
