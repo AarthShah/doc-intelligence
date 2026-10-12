@@ -2,6 +2,8 @@ from typing import List, Optional, Union
 
 import re
 
+from doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
+
 try:
     import nltk
     from nltk.tokenize import sent_tokenize
@@ -30,16 +32,20 @@ class ContextCompressor:
         embedding_model (object): Model providing an `embed` method for generating text embeddings.
         similarity_threshold (float): Cosine similarity cutoff above which sentences are treated as redundant.
     """
-    def __init__(self, embedding_model, similarity_threshold: float = 0.85):
+    def __init__(self, embedding_model, similarity_threshold: float = 0.85, max_tokens: int = 4096, tokenizer=None):
         """
-        Initializes the ContextCompressor with an embedding model and a similarity threshold.
+        Initializes the ContextCompressor with an embedding model, a similarity threshold, and token budget options.
 
         Args:
             embedding_model (object): The model used to compute vector embeddings for sentences.
             similarity_threshold (float, optional): The threshold for sentence redundancy. Defaults to 0.85.
+            max_tokens (int, optional): The maximum allowed number of tokens. Defaults to 4096.
+            tokenizer (Callable[[str], List[str]], optional): A callable that tokenizes text. Defaults to whitespace tokenization.
         """
         self.embedding_model = embedding_model
         self.similarity_threshold = similarity_threshold
+        resolved_tokenizer = tokenizer if tokenizer is not None else (lambda t: t.split())
+        self.token_budget_manager = TokenBudgetManager(max_tokens=max_tokens, tokenizer=resolved_tokenizer)
 
     def compress(self, chunks: Union[str, List[str]]) -> Union[str, List[str]]:
         """
@@ -91,9 +97,11 @@ class ContextCompressor:
                 if not is_redundant:
                     filtered_sentences.append(sentence)
                     filtered_embeddings.append(sentence_embeddings[i])
-            compressed_chunks.append(". ".join(filtered_sentences) + ("." if filtered_sentences and not filtered_sentences[-1].endswith(('.', '!', '?')) else ""))
+            chunk_text = ". ".join(filtered_sentences) + ("." if filtered_sentences and not filtered_sentences[-1].endswith(('.', '!', '?')) else "")
+            compressed_chunks.append(chunk_text)
 
-        return compressed_chunks[0] if is_single_string else compressed_chunks
+        truncated_chunks = self.token_budget_manager.truncate(compressed_chunks)
+        return truncated_chunks[0] if is_single_string else truncated_chunks
 
     def _get_sentences(self, text: str) -> List[str]:
         """
