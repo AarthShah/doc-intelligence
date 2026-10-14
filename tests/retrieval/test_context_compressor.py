@@ -25,12 +25,12 @@ def test_context_compressor_compress_redundant_sentences():
         def cosine_similarity(self, vec_a: List[float], vec_b: List[float]) -> float:
             # Simulate high similarity for identical sentences
             if vec_a == vec_b:
-                return 0.99
+                return 0.99  # Above threshold
             # Simulate low similarity for different sentences
-            return 0.1
-
+            return 0.1  # Below threshold
+    
     compressor = MockContextCompressor(embedding_model=embedding_model, similarity_threshold=0.85)
-
+    
     # Text with redundant sentences
     text = "This is the first sentence. This is the first sentence. This is a different sentence. This is the first sentence."
     compressed_text = compressor.compress(text)
