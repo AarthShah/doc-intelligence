@@ -8,33 +8,56 @@ class Evaluator:
 
 class FaithfulnessEvaluator(Evaluator):
     """
-    Evaluates the faithfulness of an answer to a given context.
+    Evaluates the faithfulness of an answer to a given context in a RAG pipeline.
 
     Faithfulness measures whether the generated answer is factually supported
-    by the provided context.
+    by the provided retrieved context, preventing hallucinations and ensuring
+    that claims made in the answer stem directly from the retrieved sources.
+
+    Attributes:
+        llm_client (Callable[..., str]): A callable client used to query an LLM
+            with formatted evaluation prompts.
+
+    Example:
+        >>> def mock_llm(prompt: str) -> str:
+        ...     return "0.95"
+        >>> evaluator = FaithfulnessEvaluator(llm_client=mock_llm)
+        >>> score = evaluator.evaluate(
+        ...     question="What is the capital of France?",
+        ...     context="France is a country in Europe. Its capital is Paris.",
+        ...     answer="The capital of France is Paris."
+        ... )
+        >>> print(score)
+        0.95
     """
 
     def __init__(self, llm_client: Callable[..., str]):
         """
-        Initializes the FaithfulnessEvaluator.
+        Initializes the FaithfulnessEvaluator with an LLM client.
 
         Args:
-            llm_client: A callable that simulates an LLM, accepting a prompt
-                        and returning a generated string.
+            llm_client (Callable[..., str]): A callable that simulates an LLM, accepting a prompt
+                string and returning a generated string response containing the evaluation score.
         """
         self.llm_client = llm_client
 
     def evaluate(self, question: str, context: str, answer: str) -> float:
         """
-        Evaluates the faithfulness of the answer based on the context and question.
+        Evaluates the factual faithfulness of the generated answer against the retrieved context.
+
+        Constructs an evaluation prompt combining the question, context, and answer, queries
+        the language model via the LLM client, and parses the resulting score. The score is
+        clamped between 0.0 and 1.0.
 
         Args:
-            question: The original question asked.
-            context: The retrieved context used to generate the answer.
-            answer: The generated answer.
+            question (str): The original user query or question.
+            context (str): The retrieved text context used to ground the generation.
+            answer (str): The generated answer produced by the RAG system.
 
         Returns:
-            A float score between 0 and 1, where 1 indicates perfect faithfulness.
+            float: A score between 0.0 and 1.0, where 1.0 indicates that the answer is fully
+            supported by the context and 0.0 indicates complete lack of support or hallucination.
+            Returns 0.0 if the LLM response cannot be successfully parsed as a float.
         """
         prompt = f"""Given the following question and context, is the answer factually supported by the context?
 Question: {question}

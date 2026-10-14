@@ -5,7 +5,7 @@ from doc_intelligence.retrieval.context_compressor import ContextCompressor
 class DummyEmbeddingModel:
     def embed(self, texts):
         # Return unique or hash-based mock embeddings to differentiate sentences
-        return [[float(hash(t) % 10) / 10.0, 0.2, 0.3] for t in texts]
+        return [[float(hash(t) % 1000) / 1000.0, float(len(t)) / 100.0, 0.3] for t in texts]
 
 
 def test_context_compressor_initialization():
