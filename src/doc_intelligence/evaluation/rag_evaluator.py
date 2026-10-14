@@ -3,6 +3,7 @@
 import re
 from typing import List, Set
 from doc_intelligence.models import EvaluationReport
+from doc_intelligence.evaluation.faithfulness_evaluator import FaithfulnessEvaluator
 
 
 class RAGEvaluator:
@@ -29,6 +30,10 @@ class RAGEvaluator:
         answer_tokens = self._extract_content_tokens(answer)
         context_text = " ".join(context)
         context_tokens = self._extract_content_tokens(context_text)
+
+        # TODO: Optionally integrate FaithfulnessEvaluator (e.g., using an LLM client) 
+        # for semantic/model-based faithfulness scoring alongside token-based checks.
+        # faithfulness_evaluator = FaithfulnessEvaluator(llm_client=...)
 
         # 1. Faithfulness: what proportion of answer content tokens appear in the context
         if not answer_tokens:
