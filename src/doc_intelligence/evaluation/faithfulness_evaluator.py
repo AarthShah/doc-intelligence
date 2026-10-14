@@ -36,8 +36,20 @@ class FaithfulnessEvaluator(Evaluator):
         Returns:
             A float score between 0 and 1, where 1 indicates perfect faithfulness.
         """
-        # TODO: Implement actual faithfulness evaluation logic using the LLM client.
-        # This will likely involve crafting a prompt that asks the LLM to determine
-        # if the answer is supported by the context and then parsing the LLM's response.
-        # For now, return a placeholder value.
-        return 0.75
+        prompt = f"""Given the following question and context, is the answer factually supported by the context?
+Question: {question}
+Context: {context}
+Answer: {answer}
+
+Respond with a score between 0 and 1, where 1 means the answer is fully supported by the context and 0 means it is not supported at all. Only provide the score.
+"""
+        try:
+            response = self.llm_client(prompt)
+            # Attempt to parse the response as a float.
+            score = float(response.strip())
+            # Clamp the score between 0 and 1.
+            return max(0.0, min(1.0, score))
+        except (ValueError, TypeError):
+            # If parsing fails, return a default low score or handle as appropriate.
+            # For now, returning 0.0 to indicate potential lack of faithfulness or an issue.
+            return 0.0
