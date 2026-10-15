@@ -1,6 +1,10 @@
 """Comprehensive unit tests for doc-intelligence end-to-end pipeline."""
 
 import unittest
+import unittest
+from typing import List
+from unittest.mock import MagicMock, patch
+
 from doc_intelligence.models import Document, DocumentMetadata
 from doc_intelligence.ingestion.text_parser import TextParser
 from doc_intelligence.ingestion.markdown_parser import MarkdownParser
@@ -12,6 +16,34 @@ from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
 
 
+import sys
+from unittest.mock import MagicMock
+
+# Ensure sentence_transformers is mocked if not installed
+if "sentence_transformers" not in sys.modules:
+    sys.modules["sentence_transformers"] = MagicMock()
+
+
+# Mock SentenceTransformer and util for testing
+class MockSentenceTransformer:
+    def __init__(self, model_name: str):
+        pass
+
+    def encode(self, text: str, convert_to_tensor: bool = False) -> List[float]:
+        # Return a dummy embedding based on text length for stable sorting in tests
+        return [float(len(text) % 100) / 100.0, 0.5, 0.1]
+
+
+class MockUtil:
+    @staticmethod
+    def pytorch_cos_sim(a: List[float], b: List[float]) -> List[List[float]]:
+        # Simulate cosine similarity based on input length for stable sorting
+        score = (1.0 - abs(len(a) - len(b)) / 100.0) * 0.95
+        return [[score]]
+
+
+@patch("sentence_transformers.SentenceTransformer", MockSentenceTransformer)
+@patch("sentence_transformers.util", MockUtil())
 class TestDocIntelligencePipeline(unittest.TestCase):
     """Test suite covering ingestion, chunking, retrieval, and evaluation."""
 
