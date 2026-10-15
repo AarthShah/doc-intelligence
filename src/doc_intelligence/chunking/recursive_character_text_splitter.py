@@ -1,6 +1,6 @@
 from typing import List, Optional, Pattern
 
-from src.doc_intelligence.models import Document, Chunk
+from src.doc_intelligence.models import Chunk, Document
 
 
 class RecursiveCharacterTextSplitter:
@@ -126,8 +126,8 @@ class RecursiveCharacterTextSplitter:
             # Create a new chunk object
             chunk = Chunk(
                 id=f"{document.metadata.id}-chunk-{i}",  # Simple ID generation
-                content=chunk_text,
-                document_metadata=document.metadata,
+                text=chunk_text, # Changed from content to text
+                metadata=document.metadata, # Changed from document_metadata to metadata
                 # Other metadata can be added here if needed
             )
             chunks.append(chunk)

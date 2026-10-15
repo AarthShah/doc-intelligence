@@ -25,8 +25,8 @@ class TokenBudgetManager:
         Initialize the TokenBudgetManager.
 
         Args:
-            max_tokens (int): The maximum token budget allowed.
-            tokenizer (Callable[[str], List[str]]): A function or callable to tokenize text.
+            max_tokens: The maximum token budget allowed.
+            tokenizer: A function or callable to tokenize text.
         """
         self.max_tokens = max_tokens
         self.tokenizer = tokenizer
@@ -36,10 +36,10 @@ class TokenBudgetManager:
         Return the number of tokens in the given text using the configured tokenizer.
 
         Args:
-            text (str): The text string to count tokens for.
+            text: The text string to count tokens for.
 
         Returns:
-            int: The total number of tokens.
+            The total number of tokens.
 
         Example:
             >>> manager = TokenBudgetManager(max_tokens=10, tokenizer=lambda t: t.split())
@@ -53,11 +53,11 @@ class TokenBudgetManager:
         Truncate a single text so that its token count does not exceed the remaining token budget.
 
         Args:
-            text (str): The text string to truncate.
-            remaining (int): The maximum number of tokens allowed for this text.
+            text: The text string to truncate.
+            remaining: The maximum number of tokens allowed for this text.
 
         Returns:
-            str: The truncated text joined by single spaces.
+            The truncated text joined by single spaces.
 
         Example:
             >>> manager = TokenBudgetManager(max_tokens=10, tokenizer=lambda t: t.split())
@@ -77,10 +77,10 @@ class TokenBudgetManager:
         Iteratively add texts while total token count is within max_tokens, truncating the last text if necessary.
 
         Args:
-            texts (List[str]): A list of text strings to process and fit into the budget.
+            texts: A list of text strings to process and fit into the budget.
 
         Returns:
-            List[str]: A filtered and potentially truncated list of texts fitting within max_tokens.
+            A filtered and potentially truncated list of texts fitting within max_tokens.
 
         Example:
             >>> manager = TokenBudgetManager(max_tokens=4, tokenizer=lambda t: t.split())
