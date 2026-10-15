@@ -5,6 +5,7 @@ from typing import List, Set
 from doc_intelligence.models import EvaluationReport
 from doc_intelligence.evaluation.faithfulness_evaluator import FaithfulnessEvaluator
 from doc_intelligence.evaluation.answer_relevance_evaluator import AnswerRelevanceEvaluator
+from doc_intelligence.evaluation.hallucination_detector import HallucinationDetector
 
 
 class RAGEvaluator:
@@ -14,9 +15,11 @@ class RAGEvaluator:
         self,
         faithfulness_evaluator: FaithfulnessEvaluator = None,
         answer_relevance_evaluator: AnswerRelevanceEvaluator = None,
+        hallucination_detector: HallucinationDetector = None,
     ):
         self.faithfulness_evaluator = faithfulness_evaluator
         self.answer_relevance_evaluator = answer_relevance_evaluator
+        self.hallucination_detector = hallucination_detector
 
     STOPWORDS = {
         "a", "an", "the", "and", "or", "but", "if", "in", "on", "at", "to", "for",
@@ -86,8 +89,12 @@ class RAGEvaluator:
         # 1. Faithfulness: what proportion of answer content tokens appear in the context
         faithfulness = self.evaluate_faithfulness(context, answer, answer_tokens, context_tokens)
 
-        # 2. Hallucination score: inverse of faithfulness
-        hallucination = round(1.0 - faithfulness, 3)
+        # 2. Hallucination score: use hallucination detector if available, else inverse of faithfulness
+        if self.hallucination_detector:
+            det_result = self.hallucination_detector.detect(context_text, answer)
+            hallucination = round(det_result.get("hallucination_score", 1.0 - faithfulness), 3)
+        else:
+            hallucination = round(1.0 - faithfulness, 3)
         faithfulness = round(faithfulness, 3)
 
         # 3. Answer Relevance: overlap between query and answer keywords
