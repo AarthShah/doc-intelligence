@@ -203,9 +203,9 @@ score_supported = detector.detect(context=context, answer=answer_supported)
 score_hallucinated = detector.detect(context=context, answer=answer_hallucinated)
 score_irrelevant = detector.detect(context=context, answer=answer_irrelevant)
 
-print(f"Supported Answer Hallucination Score: {score_supported:.4f}")
-print(f"Hallucinated Answer Hallucination Score: {score_hallucinated:.4f}")
-print(f"Irrelevant Answer Hallucination Score: {score_irrelevant:.4f}")
+print(f"Supported Answer: {score_supported}")
+print(f"Hallucinated Answer: {score_hallucinated}")
+print(f"Irrelevant Answer: {score_irrelevant}")
 ```
 
 ---
