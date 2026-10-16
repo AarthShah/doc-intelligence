@@ -17,7 +17,13 @@ class HallucinationDetector:
 
     This detector uses a Cross-Encoder model trained on Natural Language Inference (NLI)
     tasks to determine the logical relationship between the retrieved context and
-    the generated answer.
+    the generated answer. It quantifies the degree to which an answer is supported
+    by provided contextual information, thereby identifying unsupported claims
+    (hallucinations).
+
+    Attributes:
+        model (CrossEncoder): The underlying pre-trained Cross-Encoder model
+                              used for NLI tasks.
     """
 
     def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-base") -> None:
