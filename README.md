@@ -184,6 +184,32 @@ for i, text in enumerate(fitting_texts):
 
 ---
 
+## 7.7. Hallucination Detection Example
+
+```python
+from doc_intelligence.evaluation.hallucination_detector import HallucinationDetector
+
+# 1. Initialize the hallucination detector
+detector = HallucinationDetector()
+
+# 2. Define context and answer pairs
+context = "The Amazon rainforest is the largest tropical rainforest in the world. It is home to an incredible diversity of wildlife and plays a critical role in regulating the Earth's climate."
+answer_supported = "The Amazon rainforest is the largest tropical rainforest globally."
+answer_hallucinated = "The Amazon rainforest is located in Africa and is known for its deserts."
+answer_irrelevant = "Birds can fly."
+
+# 3. Detect hallucination scores
+score_supported = detector.detect(context=context, answer=answer_supported)
+score_hallucinated = detector.detect(context=context, answer=answer_hallucinated)
+score_irrelevant = detector.detect(context=context, answer=answer_irrelevant)
+
+print(f"Supported Answer Hallucination Score: {score_supported:.4f}")
+print(f"Hallucinated Answer Hallucination Score: {score_hallucinated:.4f}")
+print(f"Irrelevant Answer Hallucination Score: {score_irrelevant:.4f}")
+```
+
+---
+
 ## 8. ePub Extraction Example
 
 ```python
