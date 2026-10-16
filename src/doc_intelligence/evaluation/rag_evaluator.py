@@ -91,9 +91,12 @@ class RAGEvaluator:
 
         # 2. Hallucination score: use hallucination detector if available, else inverse of faithfulness
         if self.hallucination_detector:
+            # The hallucination detector's output is expected to be a dictionary containing a "hallucination_score".
+            # We default to 1.0 - faithfulness if the score is not found.
             det_result = self.hallucination_detector.detect(context_text, answer)
             hallucination = round(det_result.get("hallucination_score", 1.0 - faithfulness), 3)
         else:
+            # Fallback to inverse faithfulness if no detector is provided
             hallucination = round(1.0 - faithfulness, 3)
         faithfulness = round(faithfulness, 3)
 
