@@ -20,25 +20,34 @@ class HallucinationDetector:
     the generated answer.
     """
 
-    def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-base"):
+    def __init__(self, model_name: str = "cross-encoder/nli-deberta-v3-base") -> None:
         """
         Initializes the HallucinationDetector with a pre-trained NLI model.
 
         Args:
             model_name (str): The name of the pre-trained CrossEncoder model to use.
+                Defaults to "cross-encoder/nli-deberta-v3-base".
         """
         self.model = CrossEncoder(model_name)
 
-    def detect(self, premise: str, hypothesis: str) -> dict:
+    def detect(self, premise: str, hypothesis: str) -> dict[str, float | bool]:
         """
         Detects whether a hypothesis (answer) is entailed by the premise (context).
 
+        This method evaluates the logical relationship between the given context (premise)
+        and the generated answer (hypothesis) using a Cross-Encoder Natural Language Inference
+        (NLI) model, returning an entailment score and a support status boolean.
+
         Args:
-            premise (str): The retrieved context.
-            hypothesis (str): The generated answer to evaluate.
+            premise (str): The retrieved context text serving as the reference premise.
+            hypothesis (str): The generated answer text to evaluate against the premise.
 
         Returns:
-            dict: Containing prediction scores and entailment status.
+            dict[str, float | bool]: A dictionary containing:
+                - "entailment_score" (float): The normalized probability score (0.0 to 1.0)
+                  indicating the likelihood that the hypothesis is entailed by the premise.
+                - "is_supported" (bool): A boolean flag indicating whether the entailment
+                  score exceeds the 0.5 threshold (True if supported, False if unsupported/hallucinated).
         """
         import numpy as np
 
