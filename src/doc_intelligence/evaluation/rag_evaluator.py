@@ -99,6 +99,7 @@ class RAGEvaluator:
         faithfulness = round(faithfulness_score, 3)
 
         # 2. Hallucination score: use hallucination detector if available, else inverse of faithfulness
+        det_result = None
         if self.hallucination_detector:
             det_result = self.hallucination_detector.detect(context_text, answer)
             if isinstance(det_result, dict):
@@ -139,6 +140,7 @@ class RAGEvaluator:
                 "unsupported_answer_tokens": list(answer_tokens - context_tokens)[:10],
                 "grounded_tokens_count": len(answer_tokens.intersection(context_tokens)),
                 "total_answer_tokens": len(answer_tokens),
+                "raw_hallucination_data": det_result if isinstance(det_result, dict) else {},
             },
         )
 
@@ -216,13 +218,20 @@ class UnifiedRAGEvaluator:
             faithfulness_val = float(faithfulness_score)
             faithfulness_dict = {"faithfulness_score": faithfulness_val}
 
+        hallucination_data = {
+            "score": evaluation_report.hallucination_score,
+            "is_hallucination": evaluation_report.hallucination_score > 0.5,
+        }
+
+        # Retrieve raw detector output from details if available
+        raw_det = evaluation_report.details.get("raw_hallucination_data", {})
+        if isinstance(raw_det, dict):
+            hallucination_data.update(raw_det)
+
         return {
             "faithfulness": faithfulness_dict,
             "answer_relevance": ans_rel_dict,
-            "hallucination": {
-                "score": evaluation_report.hallucination_score,
-                "is_hallucination": evaluation_report.hallucination_score > 0.5,
-            },
+            "hallucination": hallucination_data,
             "faithfulness_score": faithfulness_val,
             "answer_relevance_score": ans_rel_val,
             "context_recall_score": evaluation_report.context_recall_score,
