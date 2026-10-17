@@ -210,6 +210,27 @@ print(f"Irrelevant Answer: {score_irrelevant}")
 
 ---
 
+## 7.8. Unified RAG Evaluator Example
+
+```python
+from doc_intelligence.evaluation.unified_rag_evaluator import UnifiedRAGEvaluator
+
+# 1. Initialize the unified RAG evaluator
+unified_evaluator = UnifiedRAGEvaluator()
+
+# 2. Run comprehensive evaluation
+report = unified_evaluator.evaluate(
+    query="What is the role of the Amazon rainforest?",
+    context="The Amazon rainforest is the largest tropical rainforest in the world and plays a critical role in regulating the Earth's climate.",
+    answer="The Amazon rainforest is the largest tropical rainforest globally and regulates the Earth's climate."
+)
+
+# 3. Output detailed JSON report
+print(report.to_json(indent=2))
+```
+
+---
+
 ## 8. ePub Extraction Example
 
 ```python
