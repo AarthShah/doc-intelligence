@@ -200,7 +200,6 @@ class UnifiedRAGEvaluator:
             ground_truth=ground_truth,
         )
 
-        # If an answer_relevance_evaluator was used, it might return a dict. Let's handle evaluation_report.answer_relevance_score safely.
         ans_rel_score = evaluation_report.answer_relevance_score
         if isinstance(ans_rel_score, dict):
             ans_rel_dict = ans_rel_score
@@ -209,18 +208,22 @@ class UnifiedRAGEvaluator:
             ans_rel_val = float(ans_rel_score)
             ans_rel_dict = {"answer_relevance_score": ans_rel_val}
 
-        # Return structured format matching expected test and JSON expectations
+        faithfulness_score = evaluation_report.faithfulness_score
+        if isinstance(faithfulness_score, dict):
+            faithfulness_dict = faithfulness_score
+            faithfulness_val = faithfulness_dict.get("faithfulness_score", 0.0)
+        else:
+            faithfulness_val = float(faithfulness_score)
+            faithfulness_dict = {"faithfulness_score": faithfulness_val}
+
         return {
-            "faithfulness": {
-                "faithfulness_score": evaluation_report.faithfulness_score,
-            },
+            "faithfulness": faithfulness_dict,
             "answer_relevance": ans_rel_dict,
             "hallucination": {
                 "score": evaluation_report.hallucination_score,
                 "is_hallucination": evaluation_report.hallucination_score > 0.5,
             },
-            # The following are direct scores for easier access and backward compatibility
-            "faithfulness_score": evaluation_report.faithfulness_score,
+            "faithfulness_score": faithfulness_val,
             "answer_relevance_score": ans_rel_val,
             "context_recall_score": evaluation_report.context_recall_score,
             "hallucination_score": evaluation_report.hallucination_score,
