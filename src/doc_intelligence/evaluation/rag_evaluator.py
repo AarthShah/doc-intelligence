@@ -39,7 +39,10 @@ class RAGEvaluator:
     ) -> float:
         """Score the faithfulness of generated answers against context."""
         if self.faithfulness_evaluator:
-            return self.faithfulness_evaluator.evaluate(context, answer)
+            res = self.faithfulness_evaluator.evaluate(context, answer)
+            if isinstance(res, dict):
+                return res.get("faithfulness_score", 0.0)
+            return float(res)
 
         if answer_tokens is None:
             answer_tokens = self._extract_content_tokens(answer)
@@ -87,18 +90,28 @@ class RAGEvaluator:
         context_tokens = self._extract_content_tokens(context_text)
 
         # 1. Faithfulness: what proportion of answer content tokens appear in the context
-        faithfulness = self.evaluate_faithfulness(context, answer, answer_tokens, context_tokens)
+        faithfulness_result = self.evaluate_faithfulness(context, answer, answer_tokens, context_tokens)
+        if isinstance(faithfulness_result, dict):
+            faithfulness_score = faithfulness_result.get("faithfulness_score", 0.0)
+        else:
+            faithfulness_score = float(faithfulness_result)
+        
+        faithfulness = round(faithfulness_score, 3)
 
         # 2. Hallucination score: use hallucination detector if available, else inverse of faithfulness
         if self.hallucination_detector:
-            # The hallucination detector's output is expected to be a dictionary containing a "hallucination_score".
-            # We default to 1.0 - faithfulness if the score is not found.
             det_result = self.hallucination_detector.detect(context_text, answer)
-            hallucination = round(det_result.get("hallucination_score", 1.0 - faithfulness), 3)
+            if isinstance(det_result, dict):
+                h_score = det_result.get("hallucination_score")
+                if h_score is None and "score" in det_result:
+                    h_score = det_result.get("score")
+                if h_score is None:
+                    h_score = 1.0 - faithfulness_score
+                hallucination = round(float(h_score), 3)
+            else:
+                hallucination = round(1.0 - faithfulness_score, 3)
         else:
-            # Fallback to inverse faithfulness if no detector is provided
-            hallucination = round(1.0 - faithfulness, 3)
-        faithfulness = round(faithfulness, 3)
+            hallucination = round(1.0 - faithfulness_score, 3)
 
         # 3. Answer Relevance: overlap between query and answer keywords
         relevance = self.evaluate_answer_relevance(query, answer, query_tokens, answer_tokens)
@@ -163,31 +176,52 @@ class UnifiedRAGEvaluator:
 
     def run_evaluation(
         self,
-        question: str,
-        ground_truth_answer: str,
-        retrieved_context: List[str],
+        query: str,
+        contexts: List[str],
+        answer: str,
+        ground_truth: str = "",
     ) -> dict:
         """
         Runs all configured RAG evaluation metrics.
 
         Args:
-            question: The user's question.
-            ground_truth_answer: The expected correct answer.
-            retrieved_context: A list of strings representing the retrieved context documents.
+            query: The user's query/question.
+            contexts: A list of strings representing the retrieved context documents.
+            answer: The generated answer.
+            ground_truth: Optional expected correct answer.
 
         Returns:
-            A dictionary containing the evaluation scores.
+            A dictionary containing the evaluation scores and details.
         """
         evaluation_report = self.rag_evaluator.evaluate(
-            query=question,
-            context=retrieved_context,
-            answer=ground_truth_answer,  # Assuming ground_truth_answer is used as the answer for evaluation
-            ground_truth=ground_truth_answer,
+            query=query,
+            context=contexts,
+            answer=answer,
+            ground_truth=ground_truth,
         )
 
+        # If an answer_relevance_evaluator was used, it might return a dict. Let's handle evaluation_report.answer_relevance_score safely.
+        ans_rel_score = evaluation_report.answer_relevance_score
+        if isinstance(ans_rel_score, dict):
+            ans_rel_dict = ans_rel_score
+            ans_rel_val = ans_rel_dict.get("answer_relevance_score", 0.0)
+        else:
+            ans_rel_val = float(ans_rel_score)
+            ans_rel_dict = {"answer_relevance_score": ans_rel_val}
+
+        # Return structured format matching expected test and JSON expectations
         return {
+            "faithfulness": {
+                "faithfulness_score": evaluation_report.faithfulness_score,
+            },
+            "answer_relevance": ans_rel_dict,
+            "hallucination": {
+                "score": evaluation_report.hallucination_score,
+                "is_hallucination": evaluation_report.hallucination_score > 0.5,
+            },
+            # The following are direct scores for easier access and backward compatibility
             "faithfulness_score": evaluation_report.faithfulness_score,
-            "answer_relevance_score": evaluation_report.answer_relevance_score,
+            "answer_relevance_score": ans_rel_val,
             "context_recall_score": evaluation_report.context_recall_score,
             "hallucination_score": evaluation_report.hallucination_score,
         }
