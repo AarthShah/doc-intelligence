@@ -27,7 +27,7 @@ class RAGEvaluator:
     }
 
     def _extract_content_tokens(self, text: str) -> Set[str]:
-        tokens = re.findall(r"\b[a-zA-Z0-9_\-]{2,}\b", text.lower())
+        tokens = re.findall(r"\b[a-zA-Z0-9_\-\.]{2,}\b", text.lower())
         return {t for t in tokens if t not in self.STOPWORDS}
 
     def evaluate_faithfulness(
@@ -150,7 +150,8 @@ class UnifiedRAGEvaluator:
     Orchestrates the execution of individual RAG evaluation metrics.
 
     This class aggregates scores from faithfulness, answer relevance, and hallucination
-    detection into a single, comprehensive evaluation report.
+    detection into a single, comprehensive evaluation report while handling potential
+    exceptions during metric computations gracefully.
     """
 
     def __init__(
@@ -158,14 +159,14 @@ class UnifiedRAGEvaluator:
         faithfulness_evaluator: FaithfulnessEvaluator = None,
         answer_relevance_evaluator: AnswerRelevanceEvaluator = None,
         hallucination_detector: HallucinationDetector = None,
-    ):
+    ) -> None:
         """
         Initializes the UnifiedRAGEvaluator with optional evaluators.
 
         Args:
-            faithfulness_evaluator: An instance of FaithfulnessEvaluator.
-            answer_relevance_evaluator: An instance of AnswerRelevanceEvaluator.
-            hallucination_detector: An instance of HallucinationDetector.
+            faithfulness_evaluator (FaithfulnessEvaluator, optional): An instance of FaithfulnessEvaluator.
+            answer_relevance_evaluator (AnswerRelevanceEvaluator, optional): An instance of AnswerRelevanceEvaluator.
+            hallucination_detector (HallucinationDetector, optional): An instance of HallucinationDetector.
         """
         self.faithfulness_evaluator = faithfulness_evaluator
         self.answer_relevance_evaluator = answer_relevance_evaluator
@@ -184,23 +185,35 @@ class UnifiedRAGEvaluator:
         ground_truth: str = "",
     ) -> dict:
         """
-        Runs all configured RAG evaluation metrics.
+        Runs all configured RAG evaluation metrics with robust exception handling.
 
         Args:
-            query: The user's query/question.
-            contexts: A list of strings representing the retrieved context documents.
-            answer: The generated answer.
-            ground_truth: Optional expected correct answer.
+            query (str): The user's query/question.
+            contexts (List[str]): A list of strings representing the retrieved context documents.
+            answer (str): The generated answer.
+            ground_truth (str, optional): Optional expected correct answer.
 
         Returns:
-            A dictionary containing the evaluation scores and details.
+            dict: A dictionary containing comprehensive evaluation scores, metric dictionaries, and details.
         """
-        evaluation_report = self.rag_evaluator.evaluate(
-            query=query,
-            context=contexts,
-            answer=answer,
-            ground_truth=ground_truth,
-        )
+        try:
+            evaluation_report = self.rag_evaluator.evaluate(
+                query=query,
+                context=contexts,
+                answer=answer,
+                ground_truth=ground_truth,
+            )
+        except Exception as e:
+            # Fallback safe report in case of unexpected execution failures
+            return {
+                "faithfulness": {"faithfulness_score": 0.0, "error": str(e)},
+                "answer_relevance": {"answer_relevance_score": 0.0, "error": str(e)},
+                "hallucination": {"score": 1.0, "is_hallucination": True, "error": str(e)},
+                "faithfulness_score": 0.0,
+                "answer_relevance_score": 0.0,
+                "context_recall_score": 0.0,
+                "hallucination_score": 1.0,
+            }
 
         ans_rel_score = evaluation_report.answer_relevance_score
         if isinstance(ans_rel_score, dict):
