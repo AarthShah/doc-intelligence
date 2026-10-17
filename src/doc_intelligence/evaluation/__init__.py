@@ -4,5 +4,6 @@ from doc_intelligence.evaluation.answer_relevance_evaluator import AnswerRelevan
 from doc_intelligence.evaluation.faithfulness_evaluator import FaithfulnessEvaluator
 from doc_intelligence.evaluation.hallucination_detector import HallucinationDetector
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
+from doc_intelligence.evaluation.unified_rag_evaluator import UnifiedRAGEvaluator
 
-__all__ = ["RAGEvaluator", "FaithfulnessEvaluator", "AnswerRelevanceEvaluator", "HallucinationDetector"]
+__all__ = ["RAGEvaluator", "UnifiedRAGEvaluator", "FaithfulnessEvaluator", "AnswerRelevanceEvaluator", "HallucinationDetector"]
