@@ -128,3 +128,66 @@ class RAGEvaluator:
                 "total_answer_tokens": len(answer_tokens),
             },
         )
+
+
+class UnifiedRAGEvaluator:
+    """
+    Orchestrates the execution of individual RAG evaluation metrics.
+
+    This class aggregates scores from faithfulness, answer relevance, and hallucination
+    detection into a single, comprehensive evaluation report.
+    """
+
+    def __init__(
+        self,
+        faithfulness_evaluator: FaithfulnessEvaluator = None,
+        answer_relevance_evaluator: AnswerRelevanceEvaluator = None,
+        hallucination_detector: HallucinationDetector = None,
+    ):
+        """
+        Initializes the UnifiedRAGEvaluator with optional evaluators.
+
+        Args:
+            faithfulness_evaluator: An instance of FaithfulnessEvaluator.
+            answer_relevance_evaluator: An instance of AnswerRelevanceEvaluator.
+            hallucination_detector: An instance of HallucinationDetector.
+        """
+        self.faithfulness_evaluator = faithfulness_evaluator
+        self.answer_relevance_evaluator = answer_relevance_evaluator
+        self.hallucination_detector = hallucination_detector
+        self.rag_evaluator = RAGEvaluator(
+            faithfulness_evaluator=self.faithfulness_evaluator,
+            answer_relevance_evaluator=self.answer_relevance_evaluator,
+            hallucination_detector=self.hallucination_detector,
+        )
+
+    def run_evaluation(
+        self,
+        question: str,
+        ground_truth_answer: str,
+        retrieved_context: List[str],
+    ) -> dict:
+        """
+        Runs all configured RAG evaluation metrics.
+
+        Args:
+            question: The user's question.
+            ground_truth_answer: The expected correct answer.
+            retrieved_context: A list of strings representing the retrieved context documents.
+
+        Returns:
+            A dictionary containing the evaluation scores.
+        """
+        evaluation_report = self.rag_evaluator.evaluate(
+            query=question,
+            context=retrieved_context,
+            answer=ground_truth_answer,  # Assuming ground_truth_answer is used as the answer for evaluation
+            ground_truth=ground_truth_answer,
+        )
+
+        return {
+            "faithfulness_score": evaluation_report.faithfulness_score,
+            "answer_relevance_score": evaluation_report.answer_relevance_score,
+            "context_recall_score": evaluation_report.context_recall_score,
+            "hallucination_score": evaluation_report.hallucination_score,
+        }
