@@ -12,14 +12,19 @@ class MockLLMProvider:
                                              are the predefined responses.
     """
 
-    def __init__(self, prompt_response_map: Dict[str, str]):
+    def __init__(self, prompt_response_map: Optional[Dict[str, str]] = None):
         """
         Initializes the MockLLMProvider with a mapping of prompts to responses.
 
         Args:
-            prompt_response_map (Dict[str, str]): A dictionary containing predefined prompt-response pairs.
+            prompt_response_map (Optional[Dict[str, str]]): A dictionary containing predefined prompt-response pairs.
+                                                           Defaults to None.
         """
-        self.prompt_response_map = prompt_response_map
+        self.prompt_response_map = prompt_response_map if prompt_response_map is not None else {}
+
+    def reset(self) -> None:
+        """Clears all predefined prompt-response mappings."""
+        self.prompt_response_map = {}
 
     def generate_response(self, prompt: str, **kwargs) -> str:
         """
