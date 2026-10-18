@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from doc_intelligence.evaluation.answer_relevance_evaluator import AnswerRelevanceEvaluator
 from doc_intelligence.evaluation.faithfulness_evaluator import FaithfulnessEvaluator
 from doc_intelligence.evaluation.hallucination_detector import HallucinationDetector
@@ -8,10 +8,10 @@ class UnifiedRAGEvaluator:
     Orchestrates all evaluation metrics into a single runner that outputs detailed JSON reports.
     """
 
-    def __init__(self):
-        self.answer_relevance = AnswerRelevanceEvaluator()
-        self.faithfulness = FaithfulnessEvaluator()
-        self.hallucination = HallucinationDetector()
+    def __init__(self, llm_provider: Optional[Any] = None):
+        self.answer_relevance = AnswerRelevanceEvaluator(llm_provider=llm_provider)
+        self.faithfulness = FaithfulnessEvaluator(llm_provider=llm_provider)
+        self.hallucination = HallucinationDetector(llm_provider=llm_provider)
 
     def evaluate(self, query: str, response: str, context: List[str]) -> Dict[str, Any]:
         """
