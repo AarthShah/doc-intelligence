@@ -21,17 +21,20 @@ class MockLLMProvider:
         """
         self.prompt_response_map = prompt_response_map
 
-    def generate(self, prompt: str, stop: Optional[List[str]] = None) -> str:
+    def generate_response(self, prompt: str, **kwargs) -> str:
         """
         Generates a response based on the input prompt using the predefined map.
 
         Args:
             prompt (str): The input prompt to the LLM.
-            stop (Optional[List[str]]): A list of stop sequences (currently ignored by this mock provider).
+            **kwargs: Additional optional arguments.
 
         Returns:
-            str: The predefined response corresponding to the prompt, or a default message if the prompt is not found.
+            str: The predefined response corresponding to the prompt.
+
+        Raises:
+            KeyError: If the prompt is not found in the prompt-response map.
         """
-        # In a real LLM, 'stop' sequences would be used to truncate generation.
-        # For this mock, we directly return the mapped response.
-        return self.prompt_response_map.get(prompt, "Mock response: Prompt not found.")
+        if prompt not in self.prompt_response_map:
+            raise KeyError(f"Prompt not found in mock provider: {prompt}")
+        return self.prompt_response_map[prompt]
