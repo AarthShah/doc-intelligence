@@ -20,11 +20,13 @@ class MockLLMProvider:
             prompt_response_map (Optional[Dict[str, str]]): A dictionary containing predefined prompt-response pairs.
                                                            Defaults to None.
         """
-        self.prompt_response_map = prompt_response_map if prompt_response_map is not None else {}
+        self._initial_responses = prompt_response_map if prompt_response_map is not None else {}
+        self._responses = self._initial_responses.copy()
+
 
     def reset(self) -> None:
         """Clears all predefined prompt-response mappings."""
-        self.prompt_response_map = {}
+        self._responses = self._initial_responses.copy()
 
     def generate_response(self, prompt: str, **kwargs) -> str:
         """
@@ -40,6 +42,6 @@ class MockLLMProvider:
         Raises:
             KeyError: If the prompt is not found in the prompt-response map.
         """
-        if prompt not in self.prompt_response_map:
+        if prompt not in self._responses:
             raise KeyError(f"Prompt not found in mock provider: {prompt}")
-        return self.prompt_response_map[prompt]
+        return self._responses[prompt]
