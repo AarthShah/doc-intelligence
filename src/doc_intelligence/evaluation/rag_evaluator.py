@@ -16,10 +16,12 @@ class RAGEvaluator:
         faithfulness_evaluator: FaithfulnessEvaluator = None,
         answer_relevance_evaluator: AnswerRelevanceEvaluator = None,
         hallucination_detector: HallucinationDetector = None,
+        llm_provider: object = None,
     ):
         self.faithfulness_evaluator = faithfulness_evaluator
         self.answer_relevance_evaluator = answer_relevance_evaluator
         self.hallucination_detector = hallucination_detector
+        self.llm_provider = llm_provider
 
     STOPWORDS = {
         "a", "an", "the", "and", "or", "but", "if", "in", "on", "at", "to", "for",
