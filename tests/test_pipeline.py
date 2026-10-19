@@ -14,6 +14,7 @@ from doc_intelligence.retrieval.vector_store import VectorStore
 from doc_intelligence.retrieval.bm25_search import BM25Retriever
 from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
+from doc_intelligence.evaluation.mock_llm_provider import MockLLMProvider
 
 
 import sys
@@ -40,11 +41,6 @@ class MockUtil:
         # Simulate cosine similarity based on input length for stable sorting
         score = (1.0 - abs(len(a) - len(b)) / 100.0) * 0.95
         return [[score]]
-
-
-class MockLLM:
-    def generate(self, prompt: str, **kwargs) -> str:
-        return "Mocked response"
 
 
 class MockEvaluator:
@@ -314,11 +310,11 @@ class TestQueryToContextPipeline(unittest.TestCase):
         contexts = [r.chunk.text for r in results]
 
         # 3. Mock LLM and Evaluator
-        llm = MockLLM()
+        llm = MockLLMProvider(prompt_response_map={"RAG systems improve accuracy.": "Mocked response"})
         evaluator = MockEvaluator()
 
         # 4. Orchestrate
-        answer = llm.generate("RAG systems improve accuracy.")
+        answer = llm.generate_response("RAG systems improve accuracy.")
         report = evaluator.evaluate("RAG systems", contexts, answer)
 
         # 5. Assert
