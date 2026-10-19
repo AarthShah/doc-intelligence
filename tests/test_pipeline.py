@@ -238,6 +238,13 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertGreaterEqual(len(data["results"]), 1)
         self.assertIn("FastAPI", data["results"][0]["text"])
 
+    def test_hybrid_retrieval_component_integration(self):
+        """Test the hybrid retriever with both semantic and keyword matching capabilities."""
+        results = self.retriever.search("Retrieval-Augmented Generation", top_k=1)
+        self.assertEqual(len(results), 1)
+        self.assertGreater(results[0].score, 0.0)
+        self.assertIn("Retrieval-Augmented Generation", results[0].chunk.text)
+
 
 if __name__ == "__main__":
     unittest.main()
