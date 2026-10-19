@@ -172,14 +172,52 @@ if __name__ == "__main__":
 """Integration tests for the full query-to-context transformation pipeline."""
 
 import unittest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from doc_intelligence.models import Document, DocumentMetadata
+from doc_intelligence.ingestion.text_parser import TextParser
+from doc_intelligence.chunking.semantic_chunker import SemanticChunker
+from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 
 
 class TestQueryToContextPipeline(unittest.TestCase):
     """Test suite for end-to-end query-to-context transformation pipeline."""
 
+    def setUp(self):
+        self.app = FastAPI()
+
+        @self.app.post("/query")
+        def query_pipeline(payload: dict):
+            query = payload.get("query", "")
+            results = self.retriever.search(query, top_k=2)
+            return {"results": [{"text": r.chunk.text, "score": r.score} for r in results]}
+
+        self.client = TestClient(self.app)
+
+        parser = TextParser()
+        sample_text = (
+            "FastAPI provides high performance and automatic documentation.\n\n"
+            "Retrieval-Augmented Generation enhances LLM responses using external context."
+        )
+        doc = parser.parse(sample_text, source_name="integration_test")
+        chunker = SemanticChunker(max_chunk_size=150)
+        chunks = chunker.chunk(doc)
+
+        self.retriever = HybridRetriever()
+        self.retriever.index(chunks)
+
     def test_pipeline_placeholder(self):
         """Placeholder test to ensure the integration test suite runs successfully."""
         self.assertTrue(True)
+
+    def test_query_to_context_endpoint(self):
+        response = self.client.post("/query", json={"query": "FastAPI performance"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("results", data)
+        self.assertGreaterEqual(len(data["results"]), 1)
+        self.assertIn("FastAPI", data["results"][0]["text"])
 
 
 if __name__ == "__main__":
