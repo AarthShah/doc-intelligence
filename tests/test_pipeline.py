@@ -261,6 +261,31 @@ class TestQueryToContextPipeline(unittest.TestCase):
         total_tokens = sum(len(c.split()) for c in compressed_contexts)
         self.assertLessEqual(total_tokens, 15)
 
+    def test_full_pipeline_end_to_end(self):
+        """Test full pipeline: ingestion, retrieval, and compression for LLM consumption."""
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+
+        # 1. Ingest and index
+        parser = TextParser()
+        doc = parser.parse("RAG systems improve accuracy.", source_name="pipeline_test")
+        chunker = SemanticChunker(max_chunk_size=50)
+        chunks = chunker.chunk(doc)
+        self.retriever.index(chunks)
+
+        # 2. Retrieve
+        results = self.retriever.search("RAG systems", top_k=1)
+        contexts = [r.chunk.text for r in results]
+
+        # 3. Compress
+        mock_embedding_model = MagicMock()
+        compressor = ContextCompressor(max_tokens=20, embedding_model=mock_embedding_model)
+        compressed = compressor.compress(contexts)
+
+        # 4. Assert
+        self.assertTrue(len(compressed) > 0)
+        self.assertIsInstance(compressed[0], str)
+        self.assertLessEqual(len(compressed[0].split()), 20)
+
 
 if __name__ == "__main__":
     unittest.main()
