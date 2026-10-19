@@ -42,6 +42,20 @@ class MockUtil:
         return [[score]]
 
 
+class MockLLM:
+    def generate(self, prompt: str, **kwargs) -> str:
+        return "Mocked response"
+
+
+class MockEvaluator:
+    def evaluate(self, query: str, context: List[str], answer: str):
+        class MockReport:
+            def __init__(self, faithfulness, hallucination):
+                self.faithfulness_score = faithfulness
+                self.hallucination_score = hallucination
+        return MockReport(0.9, 0.1)
+
+
 @patch("sentence_transformers.SentenceTransformer", MockSentenceTransformer)
 @patch("sentence_transformers.util", MockUtil())
 class TestDocIntelligencePipeline(unittest.TestCase):
@@ -285,6 +299,31 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertTrue(len(compressed) > 0)
         self.assertIsInstance(compressed[0], str)
         self.assertLessEqual(len(compressed[0].split()), 20)
+
+    def test_full_pipeline_with_mocks(self):
+        """Test full pipeline orchestration using mocks."""
+        # 1. Ingest and index
+        parser = TextParser()
+        doc = parser.parse("RAG systems improve accuracy.", source_name="pipeline_test")
+        chunker = SemanticChunker(max_chunk_size=50)
+        chunks = chunker.chunk(doc)
+        self.retriever.index(chunks)
+
+        # 2. Retrieve
+        results = self.retriever.search("RAG systems", top_k=1)
+        contexts = [r.chunk.text for r in results]
+
+        # 3. Mock LLM and Evaluator
+        llm = MockLLM()
+        evaluator = MockEvaluator()
+
+        # 4. Orchestrate
+        answer = llm.generate("RAG systems improve accuracy.")
+        report = evaluator.evaluate("RAG systems", contexts, answer)
+
+        # 5. Assert
+        self.assertEqual(answer, "Mocked response")
+        self.assertEqual(report.faithfulness_score, 0.9)
 
 
 if __name__ == "__main__":
