@@ -207,9 +207,28 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.retriever = HybridRetriever()
         self.retriever.index(chunks)
 
-    def test_pipeline_placeholder(self):
-        """Placeholder test to ensure the integration test suite runs successfully."""
-        self.assertTrue(True)
+    def test_document_ingestion_and_vector_store_pipeline(self):
+        """Test document ingestion, parsing, chunking, and storing in vector store end-to-end."""
+        parser = TextParser()
+        raw_text = (
+            "Enterprise search systems require robust document processing.\n\n"
+            "Vector databases enable efficient semantic similarity lookups."
+        )
+        doc = parser.parse(raw_text, source_name="ingestion_pipeline_test")
+        self.assertEqual(doc.metadata.source_name, "ingestion_pipeline_test")
+
+        chunker = SemanticChunker(max_chunk_size=100)
+        chunks = chunker.chunk(doc)
+        self.assertGreaterEqual(len(chunks), 1)
+
+        from doc_intelligence.retrieval.vector_store import VectorStore
+        store = VectorStore()
+        store.add_chunks(chunks)
+        self.assertEqual(store.count, len(chunks))
+
+        results = store.search("vector databases", top_k=1)
+        self.assertEqual(len(results), 1)
+        self.assertIn("Vector databases", results[0].chunk.text)
 
     def test_query_to_context_endpoint(self):
         response = self.client.post("/query", json={"query": "FastAPI performance"})
