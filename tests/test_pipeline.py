@@ -245,6 +245,22 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertGreater(results[0].score, 0.0)
         self.assertIn("Retrieval-Augmented Generation", results[0].chunk.text)
 
+    def test_retrieval_with_context_compression(self):
+        """Test integration of retrieval with context compression to handle token limits."""
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+        from doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
+
+        results = self.retriever.search("FastAPI performance", top_k=2)
+        contexts = [r.chunk.text for r in results]
+
+        mock_embedding_model = MagicMock()
+        compressor = ContextCompressor(max_tokens=15, embedding_model=mock_embedding_model)
+
+        compressed_contexts = compressor.compress(contexts)
+        self.assertLessEqual(len(compressed_contexts), len(contexts))
+        total_tokens = sum(len(c.split()) for c in compressed_contexts)
+        self.assertLessEqual(total_tokens, 15)
+
 
 if __name__ == "__main__":
     unittest.main()
