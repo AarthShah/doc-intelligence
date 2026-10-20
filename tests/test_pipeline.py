@@ -603,6 +603,62 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertEqual(len(contexts), 1)
         self.assertIn("This is a test document for LLM mocking.", contexts[0])
 
+    def test_full_query_to_context_pipeline_integration(self):
+        """
+        Tests the full query-to-context pipeline: ingestion, chunking,
+        embedding, retrieval, and context compression.
+        """
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+        
+        # 1. Ingestion: Parse a sample document
+        parser = TextParser()
+        sample_text = (
+            "The quick brown fox jumps over the lazy dog. "
+            "RAG (Retrieval Augmented Generation) improves LLM responses. "
+            "Context compression helps manage token limits effectively."
+        )
+        doc = parser.parse(sample_text, source_name="full_pipeline_integration_test")
+        self.assertEqual(doc.metadata.source_name, "full_pipeline_integration_test")
+
+        # 2. Chunking: Split the document into semantic chunks
+        chunker = SemanticChunker(max_chunk_size=60)
+        chunks = chunker.chunk(doc)
+        self.assertGreaterEqual(len(chunks), 1)
+
+        # 3. Indexing/Embedding (implicitly done by HybridRetriever)
+        # Use a fresh retriever instance to avoid interference with setUp's data
+        test_retriever = HybridRetriever()
+        test_retriever.index(chunks)
+        
+        # 4. Retrieval: Search for relevant chunks
+        query = "How does RAG work with token limits?"
+        retrieved_results = test_retriever.search(query, top_k=2)
+        self.assertGreaterEqual(len(retrieved_results), 1)
+        contexts = [r.chunk.text for r in retrieved_results]
+        # Basic check to ensure some relevant context is retrieved
+        self.assertTrue(any("rag" in c.lower() for c in contexts))
+        self.assertTrue(any("token limits" in c.lower() or "token" in c.lower() for c in contexts))
+
+
+        # 5. Context Compression: Compress the retrieved contexts
+        mock_embedding_model = MagicMock() # Mock the embedding model for compressor
+        max_tokens_budget = 20 # A small budget to ensure compression takes effect
+        compressor = ContextCompressor(max_tokens=max_tokens_budget, embedding_model=mock_embedding_model)
+        
+        compressed_contexts = compressor.compress(contexts)
+
+        # 6. Assert the final output
+        self.assertTrue(isinstance(compressed_contexts, list))
+        self.assertGreater(len(compressed_contexts), 0) # Should return at least one compressed chunk
+        
+        total_tokens_compressed = sum(len(c.split()) for c in compressed_contexts)
+        self.assertLessEqual(total_tokens_compressed, max_tokens_budget)
+        
+        # Assert key information is retained after compression (basic check)
+        compressed_text = " ".join(compressed_contexts).lower()
+        self.assertTrue("rag" in compressed_text or "retrieval augmented generation" in compressed_text)
+        self.assertTrue("token limits" in compressed_text or "token" in compressed_text or "limits" in compressed_text)
+
 
 if __name__ == "__main__":
     unittest.main()
