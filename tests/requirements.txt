@@ -1,2 +1,5 @@
 pytest
 sentence-transformers
+httpx
+pytest-asyncio
+pytest-mock
