@@ -479,6 +479,30 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertEqual(answer, "Mocked response")
         self.assertEqual(report.faithfulness_score, 0.9)
 
+    def test_semantic_chunking_process(self):
+        """Test the semantic chunking process after document ingestion."""
+        parser = TextParser()
+        sample_text = (
+            "This is the first sentence of a sample document. "
+            "It contains several sentences to test the chunking process. "
+            "Semantic chunking aims to create meaningful segments of text. "
+            "Each chunk should ideally represent a coherent piece of information. "
+            "This is the final sentence of the sample document."
+        )
+        doc = parser.parse(sample_text, source_name="semantic_chunking_test")
+        chunker = SemanticChunker(max_chunk_size=60)  # Adjust size as needed
+        chunks = chunker.chunk(doc)
+
+        self.assertGreater(len(chunks), 1, "Document should be split into multiple chunks.")
+        # Assert that chunks are not empty and retain parent document ID
+        for chunk in chunks:
+            self.assertTrue(len(chunk.text) > 0, "Chunk text should not be empty.")
+            self.assertEqual(chunk.parent_doc_id, doc.id, "Chunk should reference its parent document.")
+        # This assertion might need adjustment based on the exact behavior of SemanticChunker
+        # with the given max_chunk_size and sample text. For this example, let's assume
+        # it should produce at least 2 chunks for the given text and size.
+        self.assertGreaterEqual(len(chunks), 2, "Expected at least two semantic chunks.")
+
 
 if __name__ == "__main__":
     unittest.main()
