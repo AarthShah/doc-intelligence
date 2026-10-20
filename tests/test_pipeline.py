@@ -324,3 +324,148 @@ class TestQueryToContextPipeline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+"""Integration tests for the full query-to-context transformation pipeline."""
+
+import unittest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from doc_intelligence.models import Document, DocumentMetadata
+from doc_intelligence.ingestion.text_parser import TextParser
+from doc_intelligence.chunking.semantic_chunker import SemanticChunker
+from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
+
+
+class TestQueryToContextPipeline(unittest.TestCase):
+    """Test suite for end-to-end query-to-context transformation pipeline."""
+
+    def setUp(self):
+        self.app = FastAPI()
+
+        @self.app.post("/query")
+        def query_pipeline(payload: dict):
+            query = payload.get("query", "")
+            results = self.retriever.search(query, top_k=2)
+            return {"results": [{"text": r.chunk.text, "score": r.score} for r in results]}
+
+        self.client = TestClient(self.app)
+
+        parser = TextParser()
+        sample_text = (
+            "FastAPI provides high performance and automatic documentation.\n\n"
+            "Retrieval-Augmented Generation enhances LLM responses using external context."
+        )
+        doc = parser.parse(sample_text, source_name="integration_test")
+        chunker = SemanticChunker(max_chunk_size=150)
+        chunks = chunker.chunk(doc)
+
+        self.retriever = HybridRetriever()
+        self.retriever.index(chunks)
+
+    def test_document_ingestion_and_vector_store_pipeline(self):
+        """Test document ingestion, parsing, chunking, and storing in vector store end-to-end."""
+        parser = TextParser()
+        raw_text = (
+            "Enterprise search systems require robust document processing.\n\n"
+            "Vector databases enable efficient semantic similarity lookups."
+        )
+        doc = parser.parse(raw_text, source_name="ingestion_pipeline_test")
+        self.assertEqual(doc.metadata.source_name, "ingestion_pipeline_test")
+
+        chunker = SemanticChunker(max_chunk_size=100)
+        chunks = chunker.chunk(doc)
+        self.assertGreaterEqual(len(chunks), 1)
+
+        from doc_intelligence.retrieval.vector_store import VectorStore
+        store = VectorStore()
+        store.add_chunks(chunks)
+        self.assertEqual(store.count, len(chunks))
+
+        results = store.search("vector databases", top_k=1)
+        self.assertEqual(len(results), 1)
+        self.assertIn("Vector databases", results[0].chunk.text)
+
+    def test_query_to_context_endpoint(self):
+        response = self.client.post("/query", json={"query": "FastAPI performance"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("results", data)
+        self.assertGreaterEqual(len(data["results"]), 1)
+        self.assertIn("FastAPI", data["results"][0]["text"])
+
+    def test_hybrid_retrieval_component_integration(self):
+        """Test the hybrid retriever with both semantic and keyword matching capabilities."""
+        results = self.retriever.search("Retrieval-Augmented Generation", top_k=1)
+        self.assertEqual(len(results), 1)
+        self.assertGreater(results[0].score, 0.0)
+        self.assertIn("Retrieval-Augmented Generation", results[0].chunk.text)
+
+    def test_retrieval_with_context_compression(self):
+        """Test integration of retrieval with context compression to handle token limits."""
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+        from doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
+
+        results = self.retriever.search("FastAPI performance", top_k=2)
+        contexts = [r.chunk.text for r in results]
+
+        mock_embedding_model = MagicMock()
+        compressor = ContextCompressor(max_tokens=15, embedding_model=mock_embedding_model)
+
+        compressed_contexts = compressor.compress(contexts)
+        self.assertLessEqual(len(compressed_contexts), len(contexts))
+        total_tokens = sum(len(c.split()) for c in compressed_contexts)
+        self.assertLessEqual(total_tokens, 15)
+
+    def test_full_pipeline_end_to_end(self):
+        """Test full pipeline: ingestion, retrieval, and compression for LLM consumption."""
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+
+        # 1. Ingest and index
+        parser = TextParser()
+        doc = parser.parse("RAG systems improve accuracy.", source_name="pipeline_test")
+        chunker = SemanticChunker(max_chunk_size=50)
+        chunks = chunker.chunk(doc)
+        self.retriever.index(chunks)
+
+        # 2. Retrieve
+        results = self.retriever.search("RAG systems", top_k=1)
+        contexts = [r.chunk.text for r in results]
+
+        # 3. Compress
+        mock_embedding_model = MagicMock()
+        compressor = ContextCompressor(max_tokens=20, embedding_model=mock_embedding_model)
+        compressed = compressor.compress(contexts)
+
+        # 4. Assert
+        self.assertTrue(len(compressed) > 0)
+        self.assertIsInstance(compressed[0], str)
+        self.assertLessEqual(len(compressed[0].split()), 20)
+
+    def test_full_pipeline_with_mocks(self):
+        """Test full pipeline orchestration using mocks."""
+        # 1. Ingest and index
+        parser = TextParser()
+        doc = parser.parse("RAG systems improve accuracy.", source_name="pipeline_test")
+        chunker = SemanticChunker(max_chunk_size=50)
+        chunks = chunker.chunk(doc)
+        self.retriever.index(chunks)
+
+        # 2. Retrieve
+        results = self.retriever.search("RAG systems", top_k=1)
+        contexts = [r.chunk.text for r in results]
+
+        # 3. Mock LLM and Evaluator
+        llm = MockLLMProvider(prompt_response_map={"RAG systems improve accuracy.": "Mocked response"})
+        evaluator = MockEvaluator()
+
+        # 4. Orchestrate
+        answer = llm.generate_response("RAG systems improve accuracy.")
+        report = evaluator.evaluate("RAG systems", contexts, answer)
+
+        # 5. Assert
+        self.assertEqual(answer, "Mocked response")
+        self.assertEqual(report.faithfulness_score, 0.9)
+
+
+if __name__ == "__main__":
+    unittest.main()
