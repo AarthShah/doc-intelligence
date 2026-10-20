@@ -299,8 +299,46 @@ class TestQueryToContextPipeline(unittest.TestCase):
 
         compressed_contexts = compressor.compress(contexts)
         self.assertLessEqual(len(compressed_contexts), len(contexts))
+        # We are testing compression, so we expect the compressed context to be smaller than the original.
+        # If the original context is already small, this assertion might fail.
+        # However, for typical use cases, compression should reduce the token count.
+        if contexts:
+             original_tokens = sum(len(c.split()) for c in contexts)
+             compressed_tokens = sum(len(c.split()) for c in compressed_contexts)
+             if original_tokens > 15: # Only assert compression if original was larger than target
+                 self.assertLess(compressed_tokens, original_tokens)
+        self.assertLessEqual(sum(len(c.split()) for c in compressed_contexts), 15)
+
+
+    def test_context_compression_effectiveness(self):
+        """Test that context compression effectively reduces text while retaining key info."""
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+
+        # Simulate multiple retrieved chunks with overlapping or redundant info
+        retrieved_chunks = [
+            "FastAPI is a modern, fast web framework for building APIs with Python 3.7+.",
+            "It provides high performance, automatic interactive documentation, and is built on standard Python type hints.",
+            "Key features include speed, ease of use, and robust data validation.",
+            "The framework is designed for speed and ease of development, leveraging modern Python features.",
+        ]
+
+        mock_embedding_model = MagicMock()
+        # Set a tight token budget to force significant compression
+        compressor = ContextCompressor(max_tokens=25, embedding_model=mock_embedding_model)
+
+        compressed_contexts = compressor.compress(retrieved_chunks)
+
+        # Assert that compression occurred and the output is within the token limit
+        self.assertLess(len(compressed_contexts), len(retrieved_chunks), "Compression should reduce the number of chunks.")
         total_tokens = sum(len(c.split()) for c in compressed_contexts)
-        self.assertLessEqual(total_tokens, 15)
+        self.assertLessEqual(total_tokens, 25, "Compressed context should be within the token limit.")
+
+        # Basic check to see if core information is retained (e.g., "FastAPI", "performance", "documentation")
+        compressed_text = " ".join(compressed_contexts).lower()
+        self.assertIn("fastapi", compressed_text)
+        self.assertIn("performance", compressed_text)
+        self.assertIn("documentation", compressed_text)
+
 
     def test_full_pipeline_end_to_end(self):
         """Test full pipeline: ingestion, retrieval, and compression for LLM consumption."""
