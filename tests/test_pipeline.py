@@ -514,6 +514,36 @@ class TestQueryToContextPipeline(unittest.TestCase):
         total_tokens = sum(len(c.split()) for c in compressed_contexts)
         self.assertLessEqual(total_tokens, 15)
 
+    def test_api_retrieval_and_compressed_context_keywords(self):
+        """
+        Test that retrieved and compressed contexts from API calls retain key query terms.
+        """
+        from doc_intelligence.retrieval.context_compressor import ContextCompressor
+
+        # Query that should hit content about FastAPI and documentation
+        query = "FastAPI documentation capabilities"
+        response = self.client.post("/query", json={"query": query, "top_k": 1})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        results = data.get("results", [])
+        self.assertEqual(len(results), 1)
+        contexts = [r["text"] for r in results]
+
+        # Ensure original context contains expected terms before compression
+        self.assertIn("FastAPI", contexts[0])
+        self.assertIn("documentation", contexts[0])
+
+        # Apply context compression with a tight budget
+        mock_embedding_model = MagicMock()
+        compressor = ContextCompressor(max_tokens=10, embedding_model=mock_embedding_model)
+        compressed_contexts = compressor.compress(contexts)
+
+        # Verify compression was effective and key terms are still present
+        self.assertLessEqual(sum(len(c.split()) for c in compressed_contexts), 10)
+        compressed_text = " ".join(compressed_contexts).lower()
+        self.assertIn("fastapi", compressed_text)
+        self.assertIn("documentation", compressed_text)
+        
     def test_full_pipeline_end_to_end(self):
         """Test full pipeline: ingestion, retrieval, and compression for LLM consumption."""
         from doc_intelligence.retrieval.context_compressor import ContextCompressor
