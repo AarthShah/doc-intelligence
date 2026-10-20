@@ -572,6 +572,37 @@ class TestQueryToContextPipeline(unittest.TestCase):
         # it should produce at least 2 chunks for the given text and size.
         self.assertGreaterEqual(len(chunks), 2, "Expected at least two semantic chunks.")
 
+    def test_pipeline_with_mock_llm(self):
+        """Test the pipeline orchestration using a MockLLMProvider for deterministic responses."""
+        # 1. Ingest and index
+        parser = TextParser()
+        doc = parser.parse("This is a test document for LLM mocking.", source_name="llm_mock_test")
+        chunker = SemanticChunker(max_chunk_size=50)
+        chunks = chunker.chunk(doc)
+        self.retriever.index(chunks)
+
+        # 2. Retrieve relevant context
+        query = "What is this document about?"
+        results = self.retriever.search(query, top_k=1)
+        contexts = [r.chunk.text for r in results]
+
+        # 3. Set up MockLLMProvider with predefined responses
+        mock_llm = MockLLMProvider(
+            prompt_response_map={
+                f"Context: {contexts[0]}\nQuestion: {query}\nAnswer:": "Mocked answer based on context."
+            }
+        )
+
+        # 4. Simulate LLM generation and evaluation
+        # In a real scenario, an LLM client would be used here.
+        # We're simulating the generation step using the mock.
+        generated_answer = mock_llm.generate_response(f"Context: {contexts[0]}\nQuestion: {query}\nAnswer:")
+
+        # 5. Assertions
+        self.assertIn("Mocked answer", generated_answer)
+        self.assertEqual(len(contexts), 1)
+        self.assertIn("This is a test document for LLM mocking.", contexts[0])
+
 
 if __name__ == "__main__":
     unittest.main()
