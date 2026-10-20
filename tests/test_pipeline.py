@@ -321,6 +321,19 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertEqual(answer, "Mocked response")
         self.assertEqual(report.faithfulness_score, 0.9)
 
+    def test_document_ingestion(self):
+        """Test document ingestion and parsing using a simple text document."""
+        parser = TextParser()
+        sample_text = "This is a test document for ingestion."
+        doc = parser.parse(sample_text, source_name="test_ingestion.txt")
+
+        self.assertIsInstance(doc, Document)
+        self.assertEqual(doc.metadata.source_name, "test_ingestion.txt")
+        self.assertEqual(doc.metadata.format, "plaintext")
+        self.assertEqual(doc.text, sample_text)
+        self.assertIsNotNone(doc.id)
+        self.assertIsNotNone(doc.creation_time)
+
 
 if __name__ == "__main__":
     unittest.main()
