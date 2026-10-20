@@ -279,6 +279,13 @@ class TestQueryToContextPipeline(unittest.TestCase):
         self.assertGreater(results[0].score, 0.0)
         self.assertIn("Retrieval-Augmented Generation", results[0].chunk.text)
 
+    def test_hybrid_retrieval_component_integration(self):
+        """Test the hybrid retriever with both semantic and keyword matching capabilities."""
+        results = self.retriever.search("RAG minimizes hallucinations", top_k=1)
+        self.assertEqual(len(results), 1)
+        self.assertGreater(results[0].score, 0.0)
+        self.assertIn("minimizes hallucinations", results[0].chunk.text)
+
     def test_retrieval_with_context_compression(self):
         """Test integration of retrieval with context compression to handle token limits."""
         from doc_intelligence.retrieval.context_compressor import ContextCompressor
