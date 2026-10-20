@@ -123,6 +123,30 @@ class TestDocIntelligencePipeline(unittest.TestCase):
         self.assertEqual(len(results), 2)
         self.assertGreater(results[0].score, 0.0)
 
+    def test_vector_store_embedding_generation(self):
+        """Test that text chunks are correctly embedded and stored in the vector store."""
+        parser = TextParser()
+        sample_text = "This is a test document for embedding and retrieval."
+        doc = parser.parse(sample_text, source_name="embedding_test")
+        chunker = SemanticChunker(max_chunk_size=50)
+        chunks = chunker.chunk(doc)
+
+        store = VectorStore()
+        store.add_chunks(chunks)
+
+        # Verify embeddings were generated and stored
+        self.assertEqual(store.count, len(chunks))
+        self.assertTrue(all(chunk.embedding is not None for chunk in chunks))
+
+        # Test retrieval by searching for a term that should match the embedded chunk
+        search_query = "embedding and retrieval"
+        results = store.search(search_query, top_k=1)
+
+        self.assertEqual(len(results), 1)
+        self.assertGreater(results[0].score, 0.0)
+        self.assertIn(search_query, results[0].chunk.text)
+
+
     def test_bm25_retriever(self):
         parser = TextParser()
         doc = parser.parse(self.sample_text)
