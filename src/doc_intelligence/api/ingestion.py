@@ -1,5 +1,5 @@
 from typing import List, Optional
-from fastapi import APIRouter, File, Form, UploadFile, status
+from fastapi import APIRouter, File, Form, UploadFile, status, BackgroundTasks
 from pydantic import BaseModel, Field
 import asyncio
 
@@ -18,6 +18,7 @@ class IngestionResponse(BaseModel):
 
 @router.post("", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
 async def ingest_documents(
+    background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
     chunk_size: Optional[int] = Form(None),
     chunk_overlap: Optional[int] = Form(None),
@@ -25,11 +26,10 @@ async def ingest_documents(
     """Accept document file uploads for ingestion and asynchronous chunking."""
     file_names = [file.filename for file in files if file.filename]
 
-    # Trigger the asynchronous processing
-    asyncio.create_task(process_documents(file_names, chunk_size, chunk_overlap))
+    background_tasks.add_task(process_documents, file_names, chunk_size, chunk_overlap)
 
     return IngestionResponse(
         message="Documents received successfully and queued for processing.",
         received_files=file_names,
-        status="received",
+        status="processing",
     )
