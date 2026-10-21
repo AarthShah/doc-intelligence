@@ -19,6 +19,7 @@ from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 from doc_intelligence.retrieval.context_compressor import ContextCompressor
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 from doc_intelligence.sanitizer import DocumentSanitizer
+from doc_intelligence.api.routers.ingestion import router as ingestion_router
 
 # Global retriever & evaluator instances for the service
 retriever = HybridRetriever()
@@ -34,6 +35,8 @@ if FASTAPI_AVAILABLE:
         description="Autonomous AI Document Intelligence & RAG Evaluation Platform",
         version=__version__,
     )
+
+    app.include_router(ingestion_router, prefix="/ingest")
 
     class IngestRequest(BaseModel):
         text: str
