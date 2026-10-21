@@ -2,16 +2,23 @@
 
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Optional
 from doc_intelligence.models import Document, DocumentMetadata
+from doc_intelligence.sanitizer import DocumentSanitizer
+from doc_intelligence.ingestion.parser import BaseParser
 
 
-class MarkdownParser:
+class MarkdownParser(BaseParser):
     """Parses Markdown content and extracts structural hierarchy."""
 
     HEADER_REGEX = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
 
-    def parse(self, content_or_path: Union[str, Path], source_name: str = "document.md") -> Document:
+    def parse(
+        self,
+        content_or_path: Union[str, Path],
+        source_name: str = "document.md",
+        sanitizer: Optional[DocumentSanitizer] = None,
+    ) -> Document:
         """Parse Markdown file or raw string into a structured Document."""
         if isinstance(content_or_path, Path) or (isinstance(content_or_path, str) and Path(content_or_path).is_file()):
             path = Path(content_or_path)

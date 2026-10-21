@@ -1,6 +1,8 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Optional
 from doc_intelligence.models import Document, DocumentMetadata
+from doc_intelligence.sanitizer import DocumentSanitizer
+from doc_intelligence.ingestion.parser import BaseParser
 
 # Attempt to import BeautifulSoup; if unavailable, fall back to a minimal parser.
 try:
@@ -43,10 +45,15 @@ except ImportError:  # pragma: no cover
     BeautifulSoup = _FallbackSoup
 
 
-class HTMLParser:
+class HTMLParser(BaseParser):
     """Parse HTML content into clean, normalized Document representations."""
 
-    def parse(self, content_or_path: Union[str, Path], source_name: str = "document.html") -> Document:
+    def parse(
+        self,
+        content_or_path: Union[str, Path],
+        source_name: str = "document.html",
+        sanitizer: Optional[DocumentSanitizer] = None,
+    ) -> Document:
         """
         Convert an HTML document or string to a normalized Document.
 

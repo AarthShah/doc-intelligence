@@ -4,9 +4,10 @@ from pathlib import Path
 from typing import Union, Optional
 from doc_intelligence.models import Document, DocumentMetadata
 from doc_intelligence.sanitizer import DocumentSanitizer
+from doc_intelligence.ingestion.parser import BaseParser
 
 
-class TextParser:
+class TextParser(BaseParser):
     """Parses raw text strings or files into Document objects."""
 
     def parse(
