@@ -6,13 +6,24 @@ import asyncio
 # Import the placeholder processing function
 from src.doc_intelligence.ingestion.processor import process_documents
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Placeholder for background task
 async def _ingest_document_background(content: str, metadata: dict, chunk_size: Optional[int], chunk_overlap: Optional[int]):
     """Placeholder for the actual document ingestion and chunking logic."""
-    print(f"Processing document: {metadata.get('filename')}")
-    # In a real implementation, this would call the chunking and embedding logic
-    await asyncio.sleep(1) # Simulate async work
-    print(f"Finished processing document: {metadata.get('filename')}")
+    try:
+        print(f"Processing document: {metadata.get('filename')}")
+        # In a real implementation, this would call the chunking and embedding logic
+        await asyncio.sleep(1) # Simulate async work
+        print(f"Finished processing document: {metadata.get('filename')}")
+    except Exception as e:
+        logger.error(f"Error occurred during document processing: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An error occurred during document processing: {e}",
+        )
 
 
 router = APIRouter(prefix="/documents", tags=["ingestion"])
