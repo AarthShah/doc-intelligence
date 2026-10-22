@@ -36,7 +36,7 @@ if FASTAPI_AVAILABLE:
         version=__version__,
     )
 
-    app.include_router(ingestion_router, prefix="/ingest")
+    app.include_router(ingestion_router, prefix="/api/v1/ingestion")
 
     class IngestRequest(BaseModel):
         text: str
