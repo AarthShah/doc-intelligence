@@ -26,7 +26,7 @@ async def ingest_documents(files: List[UploadFile] = File(...)):
     return {"message": "Documents received for ingestion.", "filenames": file_names}
 
 @router.post("/ingest", response_model=IngestionResponse)
-async def ingest_document(request: DocumentIngestRequest, background_tasks: BackgroundTasks):
+async def ingest_document(request: DocumentIngestRequest, background_tasks: BackgroundTasks) -> IngestionResponse:
     """
     Ingests a document payload containing content and metadata,
     and initiates asynchronous chunking via background tasks.
