@@ -6,6 +6,15 @@ import asyncio
 # Import the placeholder processing function
 from src.doc_intelligence.ingestion.processor import process_documents
 
+# Placeholder for background task
+async def _ingest_document_background(content: str, metadata: dict, chunk_size: Optional[int], chunk_overlap: Optional[int]):
+    """Placeholder for the actual document ingestion and chunking logic."""
+    print(f"Processing document: {metadata.get('filename')}")
+    # In a real implementation, this would call the chunking and embedding logic
+    await asyncio.sleep(1) # Simulate async work
+    print(f"Finished processing document: {metadata.get('filename')}")
+
+
 router = APIRouter(prefix="/documents", tags=["ingestion"])
 
 
@@ -39,6 +48,31 @@ async def ingest_documents(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred during document ingestion: {e}",
         )
+
+
+    # Endpoint for single document ingestion
+    @router.post("/document", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
+    async def ingest_document(
+        background_tasks: BackgroundTasks,
+        content: str = Form(...),
+        filename: str = Form(...),
+        chunk_size: Optional[int] = Form(None),
+        chunk_overlap: Optional[int] = Form(None),
+    ) -> IngestionResponse:
+        """Accept a single document's content for ingestion and asynchronous chunking."""
+        metadata = {"filename": filename}
+        try:
+            background_tasks.add_task(_ingest_document_background, content, metadata, chunk_size, chunk_overlap)
+            return IngestionResponse(
+                message="Document received successfully and queued for processing.",
+                received_files=[filename],
+                status="processing",
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"An error occurred during document ingestion: {e}",
+            )
 from typing import List, Optional
 from fastapi import APIRouter, File, Form, UploadFile, status, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
