@@ -35,9 +35,8 @@ async def evaluate_rag(request: EvaluationRequest) -> EvaluationResponse:
     try:
         llm_provider = MockLLMProvider()
         
-        # Use the mock LLM provider to generate evaluation insights or scores
         prompt = f"Evaluate query: {request.query} with response: {request.response}"
-        mock_response = llm_provider.generate(prompt) if hasattr(llm_provider, "generate") else "Evaluated"
+        mock_response = llm_provider.generate_response(prompt) if hasattr(llm_provider, "generate_response") else "Evaluated"
 
         metric_scores = [
             MetricScore(metric_name="faithfulness", score=0.95, details="Response is well supported by context."),
