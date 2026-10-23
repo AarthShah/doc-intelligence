@@ -47,3 +47,11 @@ class HybridRetriever:
             for cid, score in sorted_items[:top_k]
         ]
         return results
+
+    def hybrid_search(self, query: str, top_k: int) -> List[tuple[str, str, float]]:
+        """
+        Performs a hybrid search using both vector store and BM25, returning
+        a list of (doc_id, content, score) tuples.
+        """
+        results = self.search(query, top_k)
+        return [(res.chunk.id, res.chunk.content, res.score) for res in results]
