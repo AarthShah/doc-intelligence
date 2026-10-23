@@ -28,6 +28,19 @@ class MockLLMProvider:
         """Clears all predefined prompt-response mappings."""
         self._responses = self._initial_responses.copy()
 
+    def __call__(self, prompt: str, **kwargs) -> str:
+        """
+        Allows the provider instance to be called directly as a function.
+
+        Args:
+            prompt (str): The input prompt to the LLM.
+            **kwargs: Additional optional arguments.
+
+        Returns:
+            str: The predefined response corresponding to the prompt.
+        """
+        return self.generate_response(prompt, **kwargs)
+
     def generate_response(self, prompt: str, **kwargs) -> str:
         """
         Generates a response based on the input prompt using the predefined map.
