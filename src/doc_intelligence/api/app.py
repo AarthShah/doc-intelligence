@@ -20,13 +20,15 @@ from doc_intelligence.retrieval.context_compressor import ContextCompressor
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 from doc_intelligence.sanitizer import DocumentSanitizer
 from doc_intelligence.api.routers.ingestion import router as ingestion_router
+from sentence_transformers import SentenceTransformer
 
 # Global retriever & evaluator instances for the service
 retriever = HybridRetriever()
 evaluator = RAGEvaluator()
 parser = TextParser()
 chunker = SemanticChunker(max_chunk_size=300)
-context_compressor = ContextCompressor()
+embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+context_compressor = ContextCompressor(embedding_model=embedding_model)
 
 
 if FASTAPI_AVAILABLE:
@@ -82,7 +84,7 @@ if FASTAPI_AVAILABLE:
         for r in results:
             text = r.chunk.text
             if req.compress_context:
-                text = context_compressor.compress(req.query, text)
+                text = context_compressor.compress(text)
             formatted_results.append({
                 "text": text,
                 "score": r.score,

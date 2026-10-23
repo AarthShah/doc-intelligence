@@ -6,6 +6,10 @@ import asyncio
 # Import the placeholder processing function
 from src.doc_intelligence.ingestion.processor import process_documents
 
+def process_document(*args, **kwargs):
+    """Placeholder for single document processing."""
+    pass
+
 import logging
 
 logger = logging.getLogger(__name__)
