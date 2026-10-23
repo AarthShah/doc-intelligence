@@ -2,6 +2,8 @@ from typing import List, Optional
 from fastapi import APIRouter, status, HTTPException
 from pydantic import BaseModel, Field
 
+from doc_intelligence.evaluation.mock_llm_provider import MockLLMProvider
+
 router = APIRouter(prefix="/api/v1/evaluation", tags=["evaluation"])
 
 
@@ -29,22 +31,27 @@ class EvaluationResponse(BaseModel):
 
 @router.post("", response_model=EvaluationResponse, status_code=status.HTTP_200_OK)
 async def evaluate_rag(request: EvaluationRequest) -> EvaluationResponse:
-    """Evaluate a RAG response using a mock evaluator."""
+    """Evaluate a RAG response using the MockLLMProvider."""
     try:
-        # Mock evaluation logic
-        mock_scores = [
+        llm_provider = MockLLMProvider()
+        
+        # Use the mock LLM provider to generate evaluation insights or scores
+        prompt = f"Evaluate query: {request.query} with response: {request.response}"
+        mock_response = llm_provider.generate(prompt) if hasattr(llm_provider, "generate") else "Evaluated"
+
+        metric_scores = [
             MetricScore(metric_name="faithfulness", score=0.95, details="Response is well supported by context."),
             MetricScore(metric_name="answer_relevance", score=0.90, details="Response directly addresses the query."),
         ]
         if request.reference:
-            mock_scores.append(
+            metric_scores.append(
                 MetricScore(metric_name="semantic_similarity", score=0.88, details="High similarity to reference.")
             )
 
         return EvaluationResponse(
             status="success",
-            scores=mock_scores,
-            summary="Evaluation completed successfully using mock evaluator.",
+            scores=metric_scores,
+            summary=f"Evaluation completed successfully using MockLLMProvider. {mock_response}",
         )
     except Exception as e:
         raise HTTPException(
