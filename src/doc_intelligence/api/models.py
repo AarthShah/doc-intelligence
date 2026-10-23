@@ -22,3 +22,10 @@ class EvaluationRequest(BaseModel):
     query: str
     ground_truth: str
     contexts: List[str]
+
+
+class EvaluationResponse(BaseModel):
+    answer_relevance: float = Field(..., ge=0.0, le=1.0)
+    faithfulness: float = Field(..., ge=0.0, le=1.0)
+    hallucination_score: float = Field(..., ge=0.0, le=1.0)
+    details: str = ""
