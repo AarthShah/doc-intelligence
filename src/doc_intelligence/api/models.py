@@ -16,3 +16,9 @@ class SearchResult(BaseModel):
 
 class SearchResponse(BaseModel):
     results: List[SearchResult]
+
+
+class EvaluationRequest(BaseModel):
+    query: str
+    ground_truth: str
+    contexts: List[str]
