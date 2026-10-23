@@ -20,6 +20,7 @@ from doc_intelligence.retrieval.context_compressor import ContextCompressor
 from doc_intelligence.ingestion.epub_extractor import EpubExtractor
 from doc_intelligence.sanitizer import DocumentSanitizer
 from doc_intelligence.api.routers.ingestion import router as ingestion_router
+from doc_intelligence.api.routers.evaluation import router as evaluation_router
 from sentence_transformers import SentenceTransformer
 
 # Global retriever & evaluator instances for the service
@@ -39,6 +40,7 @@ if FASTAPI_AVAILABLE:
     )
 
     app.include_router(ingestion_router, prefix="/api/v1/ingestion")
+    app.include_router(evaluation_router, prefix="/api/v1/evaluation")
 
     class IngestRequest(BaseModel):
         text: str
