@@ -54,7 +54,7 @@ if FASTAPI_AVAILABLE:
 
     class EvaluateRequest(BaseModel):
         query: str
-        context: List[str]
+        contexts: List[str]
         answer: str
         ground_truth: Optional[str] = None
 
@@ -99,11 +99,11 @@ if FASTAPI_AVAILABLE:
             "results": formatted_results,
         }
 
-    @app.post("/evaluate")
+    @app.post("/api/v1/evaluate")
     def evaluate_rag(req: EvaluateRequest) -> Dict[str, Any]:
         report = evaluator.evaluate(
             query=req.query,
-            context=req.context,
+            context=req.contexts,
             answer=req.answer,
             ground_truth=req.ground_truth or "",
         )
