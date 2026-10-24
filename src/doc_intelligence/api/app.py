@@ -3,7 +3,7 @@
 from typing import Any, Dict, List, Optional
 
 try:
-    from fastapi import FastAPI, HTTPException, UploadFile, File
+    from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
     from pydantic import BaseModel, Field
     FASTAPI_AVAILABLE = True
 except ImportError:
@@ -12,6 +12,7 @@ except ImportError:
     Field = lambda *args, **kwargs: None  # type: ignore
 
 from doc_intelligence import __version__
+from doc_intelligence.api.dependencies.rate_limiter import RateLimiter
 from doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
 from doc_intelligence.ingestion.text_parser import TextParser
@@ -30,6 +31,26 @@ parser = TextParser()
 chunker = SemanticChunker(max_chunk_size=300)
 embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 context_compressor = ContextCompressor(embedding_model=embedding_model)
+
+# Instantiate rate limiter for API request throttling
+rate_limiter = RateLimiter(requests_per_unit=100, unit_seconds=60)
+
+
+def enforce_rate_limit(request: Request, limiter: RateLimiter = Depends(lambda: rate_limiter)):
+    """
+    FastAPI dependency that checks the request against the global RateLimiter.
+    Raises HTTP 429 if the client has exceeded the allowed request quota.
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    # The RateLimiter class is expected to expose an `is_allowed` method.
+    # If it uses a different API (e.g., `allow`), adjust accordingly.
+    if not getattr(limiter, "is_allowed", getattr(limiter, "allow", None)):
+        # If the limiter does not provide a checking method, assume it allows all.
+        return limiter
+    check_fn = getattr(limiter, "is_allowed", limiter.allow)  # type: ignore
+    if not check_fn(client_ip):
+        raise HTTPException(status_code=429, detail="Too Many Requests")
+    return limiter
 
 
 if FASTAPI_AVAILABLE:
@@ -59,7 +80,7 @@ if FASTAPI_AVAILABLE:
         ground_truth: Optional[str] = None
 
     @app.get("/health")
-    def health_check() -> Dict[str, Any]:
+    def health_check(request: Request, rate_limiter: RateLimiter = Depends(enforce_rate_limit)) -> Dict[str, Any]:
         return {
             "status": "healthy",
             "version": __version__,
@@ -67,7 +88,12 @@ if FASTAPI_AVAILABLE:
         }
 
     @app.post("/ingest/text")
-    def ingest_document(req: IngestRequest, redact_pii: bool = False) -> Dict[str, Any]:
+    def ingest_document(
+        request: Request,
+        req: IngestRequest,
+        redact_pii: bool = False,
+        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
+    ) -> Dict[str, Any]:
         sanitizer = DocumentSanitizer() if redact_pii else None
         doc = parser.parse(req.text, source_name=req.source_name, sanitizer=sanitizer)
         chunks = chunker.chunk(doc)
@@ -80,7 +106,11 @@ if FASTAPI_AVAILABLE:
         }
 
     @app.post("/query")
-    def search_documents(req: QueryRequest) -> Dict[str, Any]:
+    def search_documents(
+        request: Request,
+        req: QueryRequest,
+        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
+    ) -> Dict[str, Any]:
         results = retriever.search(req.query, top_k=req.top_k)
         formatted_results = []
         for r in results:
@@ -100,7 +130,11 @@ if FASTAPI_AVAILABLE:
         }
 
     @app.post("/api/v1/evaluate")
-    def evaluate_rag(req: EvaluateRequest) -> Dict[str, Any]:
+    def evaluate_rag(
+        request: Request,
+        req: EvaluateRequest,
+        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
+    ) -> Dict[str, Any]:
         report = evaluator.evaluate(
             query=req.query,
             context=req.contexts,
@@ -116,7 +150,11 @@ if FASTAPI_AVAILABLE:
         }
 
     @app.post("/ingest/epub")
-    async def ingest_epub(file: UploadFile = File(...)) -> Dict[str, Any]:
+    async def ingest_epub(
+        request: Request,
+        file: UploadFile = File(...),
+        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
+    ) -> Dict[str, Any]:
         """Ingest an EPUB file, extract its sections, and return them as JSON."""
         import tempfile, os
         from pathlib import Path
