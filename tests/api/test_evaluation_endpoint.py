@@ -42,3 +42,46 @@ def test_evaluation_pipeline_integration():
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, dict)
+
+
+def test_evaluation_endpoint_under_rate_limit():
+    payload = {
+        "query": "What is the capital of France?",
+        "answer": "The capital of France is Paris.",
+        "contexts": ["Paris is the capital and most populous city of France."]
+    }
+    
+    # Send a small number of requests, should all be 200
+    for _ in range(5):
+        response = client.post("/api/v1/evaluate", json=payload)
+        assert response.status_code == 200
+
+
+def test_evaluation_endpoint_rate_limit():
+    payload = {
+        "query": "What is the capital of France?",
+        "answer": "The capital of France is Paris.",
+        "contexts": ["Paris is the capital and most populous city of France."]
+    }
+    
+    responses = []
+    for _ in range(50):
+        response = client.post("/api/v1/evaluate", json=payload)
+        responses.append(response.status_code)
+
+    assert 429 in responses
+
+
+def test_evaluation_endpoint_rate_limit_strict():
+    payload = {
+        "query": "What is the capital of France?",
+        "answer": "The capital of France is Paris.",
+        "contexts": ["Paris is the capital and most populous city of France."]
+    }
+    # Send many requests to exceed the limit
+    statuses = []
+    for _ in range(100):
+        response = client.post("/api/v1/evaluate", json=payload)
+        statuses.append(response.status_code)
+    # Expect at least one 429 response
+    assert 429 in statuses
