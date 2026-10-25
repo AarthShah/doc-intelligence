@@ -30,3 +30,21 @@ def test_search_endpoint():
     assert data["query"] == "What is RAG?"
     assert "results" in data
     assert isinstance(data["results"], list)
+
+
+def test_search_endpoint_rate_limiting():
+    # Make rapid requests to trigger rate limiting
+    # We expect to hit the rate limit within 50 requests
+    responses = []
+    for _ in range(50):
+        response = client.post(
+            "/query",
+            json={
+                "query": "What is rate limiting?",
+                "top_k": 1,
+            },
+        )
+        responses.append(response.status_code)
+
+    # Verify that the rate limit was triggered
+    assert 429 in responses
