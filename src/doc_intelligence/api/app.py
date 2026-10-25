@@ -36,19 +36,14 @@ context_compressor = ContextCompressor(embedding_model=embedding_model)
 rate_limiter = RateLimiter(requests_per_unit=100, unit_seconds=60)
 
 
-def enforce_rate_limit(request: Request, limiter: RateLimiter = Depends(lambda: rate_limiter)):
+def enforce_rate_limit(request: Request, limiter: RateLimiter = Depends(lambda: rate_limiter)) -> RateLimiter:
     """
     FastAPI dependency that checks the request against the global RateLimiter.
     Raises HTTP 429 if the client has exceeded the allowed request quota.
     """
     client_ip = request.client.host if request.client else "unknown"
-    # The RateLimiter class is expected to expose an `is_allowed` method.
-    # If it uses a different API (e.g., `allow`), adjust accordingly.
-    if not getattr(limiter, "is_allowed", getattr(limiter, "allow", None)):
-        # If the limiter does not provide a checking method, assume it allows all.
-        return limiter
-    check_fn = getattr(limiter, "is_allowed", limiter.allow)  # type: ignore
-    if not check_fn(client_ip):
+    check_fn = getattr(limiter, "is_allowed", getattr(limiter, "allow", None))
+    if check_fn and not check_fn(client_ip):
         raise HTTPException(status_code=429, detail="Too Many Requests")
     return limiter
 
@@ -58,6 +53,7 @@ if FASTAPI_AVAILABLE:
         title="doc-intelligence API",
         description="Autonomous AI Document Intelligence & RAG Evaluation Platform",
         version=__version__,
+        dependencies=[Depends(enforce_rate_limit)],
     )
 
     app.include_router(ingestion_router, prefix="/api/v1/ingestion")
@@ -80,7 +76,7 @@ if FASTAPI_AVAILABLE:
         ground_truth: Optional[str] = None
 
     @app.get("/health")
-    def health_check(request: Request, rate_limiter: RateLimiter = Depends(enforce_rate_limit)) -> Dict[str, Any]:
+    def health_check(request: Request) -> Dict[str, Any]:
         return {
             "status": "healthy",
             "version": __version__,
@@ -92,7 +88,6 @@ if FASTAPI_AVAILABLE:
         request: Request,
         req: IngestRequest,
         redact_pii: bool = False,
-        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
     ) -> Dict[str, Any]:
         sanitizer = DocumentSanitizer() if redact_pii else None
         doc = parser.parse(req.text, source_name=req.source_name, sanitizer=sanitizer)
@@ -109,7 +104,6 @@ if FASTAPI_AVAILABLE:
     def search_documents(
         request: Request,
         req: QueryRequest,
-        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
     ) -> Dict[str, Any]:
         results = retriever.search(req.query, top_k=req.top_k)
         formatted_results = []
@@ -133,7 +127,6 @@ if FASTAPI_AVAILABLE:
     def evaluate_rag(
         request: Request,
         req: EvaluateRequest,
-        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
     ) -> Dict[str, Any]:
         report = evaluator.evaluate(
             query=req.query,
@@ -153,7 +146,6 @@ if FASTAPI_AVAILABLE:
     async def ingest_epub(
         request: Request,
         file: UploadFile = File(...),
-        rate_limiter: RateLimiter = Depends(enforce_rate_limit),
     ) -> Dict[str, Any]:
         """Ingest an EPUB file, extract its sections, and return them as JSON."""
         import tempfile, os
