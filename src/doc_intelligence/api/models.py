@@ -1,31 +1,42 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
-
+from src.doc_intelligence.models import Document
 
 class SearchRequest(BaseModel):
-    query: str
-    top_k: int = Field(default=5, ge=1)
-    use_hybrid: bool = True
-
+    """Request model for the search endpoint."""
+    query: str = Field(..., min_length=1, description="The user query.")
+    k: int = Field(default=5, ge=1, description="Number of results to return.")
+    rerank_top_n: int = Field(default=10, ge=1, description="Number of results to rerank.")
+    use_hybrid: bool = Field(default=True, description="Whether to use hybrid search.")
 
 class SearchResult(BaseModel):
-    doc_id: str
-    content: str
+    """Represents a single search result."""
+    document: Document
     score: float
 
-
 class SearchResponse(BaseModel):
+    """Response model for the search endpoint."""
     results: List[SearchResult]
 
+class MetricScore(BaseModel):
+    """Score for an individual evaluation metric."""
+    metric_name: str
+    score: float
+    details: Optional[str] = None
 
 class EvaluationRequest(BaseModel):
-    query: str
-    ground_truth: str
-    contexts: List[str]
-
+    """Request model for RAG evaluation."""
+    query: str = Field(..., min_length=1, description="The user query.")
+    response: str = Field(..., min_length=1, description="The generated RAG response.")
+    retrieved_contexts: List[str] = Field(default_factory=list, description="The contexts retrieved for the query.")
+    reference: Optional[str] = Field(None, description="Optional ground truth reference answer.")
 
 class EvaluationResponse(BaseModel):
-    answer_relevance: float = Field(..., ge=0.0, le=1.0)
-    faithfulness: float = Field(..., ge=0.0, le=1.0)
-    hallucination_score: float = Field(..., ge=0.0, le=1.0)
-    details: str = ""
+    """Response model for RAG evaluation."""
+    status: str = "success"
+    scores: List[MetricScore] = Field(default_factory=list)
+    summary: Optional[str] = None
+
+class DocumentIngestRequest(BaseModel):
+    content: str = Field(..., min_length=1)
+    metadata: dict = Field(default_factory=dict)

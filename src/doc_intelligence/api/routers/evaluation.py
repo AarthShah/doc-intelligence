@@ -13,26 +13,7 @@ router = APIRouter(
 )
 
 
-class EvaluationRequest(BaseModel):
-    """Request model for RAG evaluation."""
-    query: str = Field(..., description="The user query.")
-    response: str = Field(..., description="The generated RAG response.")
-    retrieved_contexts: List[str] = Field(default_factory=list, description="The contexts retrieved for the query.")
-    reference: Optional[str] = Field(None, description="Optional ground truth reference answer.")
-
-
-class MetricScore(BaseModel):
-    """Score for an individual evaluation metric."""
-    metric_name: str
-    score: float
-    details: Optional[str] = None
-
-
-class EvaluationResponse(BaseModel):
-    """Response model for RAG evaluation."""
-    status: str = "success"
-    scores: List[MetricScore] = Field(default_factory=list)
-    summary: Optional[str] = None
+from src.doc_intelligence.api.models import EvaluationRequest, EvaluationResponse, MetricScore
 
 
 @router.post("", response_model=EvaluationResponse, status_code=status.HTTP_200_OK)

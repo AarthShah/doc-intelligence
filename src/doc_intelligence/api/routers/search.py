@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.doc_intelligence.api.rate_limiter import RateLimiter
 from src.doc_intelligence.chunking.recursive_character_text_splitter import RecursiveCharacterTextSplitter
@@ -75,21 +75,7 @@ def get_rate_limiter() -> RateLimiter:
 router = APIRouter(prefix="/api/v1/search", tags=["Search"], dependencies=[Depends(get_rate_limiter)])
 
 
-# Request and Response Models
-class SearchResult(BaseModel):
-    """Represents a single search result."""
-    document: Document
-    score: float
-
-class SearchRequest(BaseModel):
-    """Request model for the search endpoint."""
-    query: str
-    k: int = 5
-    rerank_top_n: int = 10
-
-class SearchResponse(BaseModel):
-    """Response model for the search endpoint."""
-    results: List[SearchResult]
+from src.doc_intelligence.api.models import SearchRequest, SearchResponse, SearchResult
 
 
 # API Endpoint
