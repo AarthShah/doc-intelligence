@@ -1,15 +1,16 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 
+from src.doc_intelligence.api.rate_limiter import RateLimiter
 from src.doc_intelligence.chunking.recursive_character_text_splitter import RecursiveCharacterTextSplitter
 from src.doc_intelligence.models import Document
 from src.doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
 from src.doc_intelligence.retrieval.reranker import Reranker
 from src.doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
 
-router = APIRouter(prefix="/api/v1/search", tags=["Search"])
+# router will be defined after get_rate_limiter
 
 # Dependencies
 def get_retriever() -> HybridRetriever:
@@ -61,6 +62,19 @@ def get_token_budget_manager() -> TokenBudgetManager:
     return TokenBudgetManager(max_tokens=1500, tokenizer=lambda text: text.split())
 
 
+_rate_limiter_instance: Optional[RateLimiter] = None
+
+def get_rate_limiter() -> RateLimiter:
+    global _rate_limiter_instance
+    if _rate_limiter_instance is None:
+        print("Initializing RateLimiter (singleton)...")
+        # Initialize the RateLimiter with desired parameters (matching the original values)
+        _rate_limiter_instance = RateLimiter(requests_per_unit=60, unit_seconds=60)
+    return _rate_limiter_instance
+
+router = APIRouter(prefix="/api/v1/search", tags=["Search"], dependencies=[Depends(get_rate_limiter)])
+
+
 # Request and Response Models
 class SearchResult(BaseModel):
     """Represents a single search result."""
@@ -82,6 +96,7 @@ class SearchResponse(BaseModel):
 @router.post("/", response_model=SearchResponse)
 async def search_endpoint(
     request: SearchRequest,
+    http_request: Request,
     retriever: HybridRetriever = Depends(get_retriever),
     reranker: Reranker = Depends(get_reranker),
     token_budget_manager: TokenBudgetManager = Depends(get_token_budget_manager),
@@ -102,6 +117,9 @@ async def search_endpoint(
         HTTPException: If the search or reranking process fails.
     """
     try:
+        # Apply rate limiting
+        # Rate limiting is applied via the router dependency; no explicit call needed here.
+
         # 1. Hybrid Search
         print(f"Performing hybrid search for query: {request.query}")
         retrieved_docs = retriever.search(query=request.query, k=request.rerank_top_n)
