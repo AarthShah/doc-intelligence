@@ -3,6 +3,15 @@ from doc_intelligence.api.app import app
 
 client = TestClient(app)
 
+def test_ingestion_invalid_payload():
+    # Invalid payload format (e.g., missing 'files' or wrong type)
+    response = client.post(
+        "/api/v1/ingest",
+        json={"files": "not_a_list"}
+    )
+    assert response.status_code == 422
+
+
 def test_ingestion_rate_limiting():
     # Make multiple rapid requests to trigger the rate limiter
     responses = []

@@ -4,6 +4,15 @@ from doc_intelligence.api.app import app
 client = TestClient(app)
 
 
+def test_evaluation_endpoint_invalid_payload():
+    # Missing required fields like 'query', 'answer', 'contexts'
+    response = client.post(
+        "/api/v1/evaluate",
+        json={"query": "What is the capital of France?"},
+    )
+    assert response.status_code == 422
+
+
 def test_evaluation_endpoint_success():
     response = client.post(
         "/api/v1/evaluate",

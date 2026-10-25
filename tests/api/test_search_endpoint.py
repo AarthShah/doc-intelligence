@@ -4,6 +4,15 @@ from doc_intelligence.api.app import app, retriever
 client = TestClient(app)
 
 
+def test_search_endpoint_invalid_payload():
+    # Invalid or missing required fields for the query endpoint
+    response = client.post(
+        "/query",
+        json={"top_k": "invalid_type"}
+    )
+    assert response.status_code == 422
+
+
 def test_search_endpoint():
     # Index a test document first
     ingest_response = client.post(
