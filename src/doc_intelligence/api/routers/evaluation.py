@@ -1,10 +1,16 @@
 from typing import List, Optional
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Depends
 from pydantic import BaseModel, Field
 
+from doc_intelligence.dependencies.rate_limiter import RateLimiter
 from doc_intelligence.evaluation.mock_llm_provider import MockLLMProvider
 
-router = APIRouter(prefix="/api/v1/evaluation", tags=["evaluation"])
+rate_limiter = RateLimiter(limit=10, period=60)
+router = APIRouter(
+    prefix="/api/v1/evaluation",
+    tags=["evaluation"],
+    dependencies=[Depends(rate_limiter)],
+)
 
 
 class EvaluationRequest(BaseModel):
