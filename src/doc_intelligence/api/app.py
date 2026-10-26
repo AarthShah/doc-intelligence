@@ -1,5 +1,7 @@
 """REST API server for doc-intelligence."""
 
+import os
+import sqlite3
 from typing import Any, Dict, List, Optional
 
 try:
@@ -23,6 +25,34 @@ from doc_intelligence.sanitizer import DocumentSanitizer
 from doc_intelligence.api.routers.ingestion import router as ingestion_router
 from doc_intelligence.api.routers.evaluation import router as evaluation_router
 from sentence_transformers import SentenceTransformer
+
+# --- Database Setup ---
+# Use an environment variable for the database path, or default to a local file
+DATABASE_PATH = os.environ.get("DOC_INTELLIGENCE_DB_PATH", "doc_intelligence.db")
+
+def initialize_database():
+    """Initializes the SQLite database and creates the metadata table if it doesn't exist."""
+    db_dir = os.path.dirname(DATABASE_PATH)
+    if db_dir and not os.path.exists(db_dir):
+        os.makedirs(db_dir)
+
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS document_metadata (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            doc_id TEXT UNIQUE NOT NULL,
+            source_name TEXT NOT NULL,
+            ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+# Initialize the database when the module is loaded
+initialize_database()
+# --- End Database Setup ---
+
 
 # Global retriever & evaluator instances for the service
 retriever = HybridRetriever()
