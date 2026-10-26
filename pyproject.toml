@@ -26,6 +26,9 @@ dependencies = [
     "ebooklib>=0.18",
 ]
 
+[project.scripts]
+ingest-docs = "doc_intelligence.cli.ingestion:main"
+
 [project.optional-dependencies]
 api = [
     "fastapi>=0.100.0",
