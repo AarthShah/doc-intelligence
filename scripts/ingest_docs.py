@@ -4,11 +4,18 @@ import sys
 from pathlib import Path
 
 from src.doc_intelligence.cli.ingestion import main as ingestion_main
+import argparse
+import logging
+import sys
+from pathlib import Path
+
+from src.doc_intelligence.cli.ingestion import main as ingestion_main
 from src.doc_intelligence.chunking.recursive_character_text_splitter import (
     RecursiveCharacterTextSplitter,
 )
 from src.doc_intelligence.embedding.fastembed_provider import FastembedProvider
 from src.doc_intelligence.storage.sqlite_vector_store import SQLiteVectorStore
+from src.doc_intelligence.ingestion.processor import Processor
 
 # Configure logging
 logging.basicConfig(
@@ -89,15 +96,20 @@ def main():
         )
         embedding_provider = FastembedProvider(model_name=embedding_model_name)
         vector_store = SQLiteVectorStore(db_path=args.vector_store_path)
-
-        # Call the core ingestion logic
-        ingestion_main(
-            input_dir=input_dir,
-            doc_types=args.doc_types,
+        processor = Processor(
             text_splitter=text_splitter,
             embedding_provider=embedding_provider,
             vector_store=vector_store,
         )
+
+        # Call the core ingestion logic
+        # The processor.process_documents method is designed to handle the file discovery,
+        # type determination, parsing, and then calls to the text_splitter, embedding_provider,
+        # and vector_store.
+        #
+        # We pass the list of document types to be processed.
+        # The processor will recursively find files in input_dir matching these types.
+        processor.process_documents(input_dir=input_dir, doc_types=args.doc_types)
 
         logger.info("Document ingestion completed successfully.")
 
