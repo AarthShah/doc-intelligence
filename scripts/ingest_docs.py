@@ -14,8 +14,12 @@ from src.doc_intelligence.chunking.recursive_character_text_splitter import (
     RecursiveCharacterTextSplitter,
 )
 from src.doc_intelligence.embedding.fastembed_provider import FastembedProvider
-from src.doc_intelligence.storage.sqlite_vector_store import SQLiteVectorStore
+from src.doc_intelligence.ingestion.html_parser import HTMLParser
+from src.doc_intelligence.ingestion.markdown_parser import MarkdownParser
+from src.doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor
 from src.doc_intelligence.ingestion.processor import Processor
+from src.doc_intelligence.ingestion.text_parser import TextParser
+from src.doc_intelligence.storage.sqlite_vector_store import SQLiteVectorStore
 
 # Configure logging
 logging.basicConfig(
@@ -30,7 +34,10 @@ EMBEDDING_MODELS = {
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Ingest documents into the vector store.")
+    parser = argparse.ArgumentParser(
+        description="Ingest documents into the vector store.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser.add_argument(
         "input_dir",
         type=str,
@@ -39,7 +46,7 @@ def parse_args():
     parser.add_argument(
         "--doc_types",
         nargs="+",
-        default=["txt", "md", "pdf"],
+        default=["txt", "md", "pdf", "html"],
         help="Document types (extensions) to process.",
     )
     parser.add_argument(
@@ -103,13 +110,33 @@ def main():
         )
 
         # Call the core ingestion logic
+        # Initialize parsers based on document types
+        parsers = {
+            "txt": TextParser(),
+            "md": MarkdownParser(),
+            "pdf": MultiColumnPDFExtractor(),
+            "html": HTMLParser(),
+        }
+
+        # Filter parsers based on allowed document types
+        allowed_parsers = {
+            doc_type: parsers[doc_type]
+            for doc_type in args.doc_types
+            if doc_type in parsers
+        }
+
+        if not allowed_parsers:
+            logger.error(f"No supported document types found. Supported types are: {list(parsers.keys())}")
+            sys.exit(1)
+
         # The processor.process_documents method is designed to handle the file discovery,
         # type determination, parsing, and then calls to the text_splitter, embedding_provider,
         # and vector_store.
         #
-        # We pass the list of document types to be processed.
-        # The processor will recursively find files in input_dir matching these types.
-        processor.process_documents(input_dir=input_dir, doc_types=args.doc_types)
+        # We pass the dictionary of allowed parsers to the processor.
+        # The processor will recursively find files in input_dir matching the keys of allowed_parsers,
+        # and use the corresponding parser instance for each file.
+        processor.process_documents(input_dir=input_dir, parsers=allowed_parsers)
 
         logger.info("Document ingestion completed successfully.")
 
