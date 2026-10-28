@@ -1,3 +1,5 @@
+import csv
+import json
 import click
 
 @click.group()
@@ -15,3 +17,19 @@ def run(dataset_path: str, model_config: str, metrics: tuple) -> None:
     click.echo(f"Running evaluation with dataset: {dataset_path}")
     click.echo(f"Using model configuration: {model_config}")
     click.echo(f"Metrics: {', '.join(metrics)}")
+
+    try:
+        if dataset_path.endswith(".json"):
+            with open(dataset_path, "r", encoding="utf-8") as f:
+                dataset = json.load(f)
+        elif dataset_path.endswith(".csv"):
+            with open(dataset_path, "r", encoding="utf-8", newline="") as f:
+                reader = csv.DictReader(f)
+                dataset = list(reader)
+        else:
+            click.echo("Error: Unsupported dataset file format. Please provide a .json or .csv file.", err=True)
+            raise click.Abort()
+        click.echo(f"Successfully loaded {len(dataset)} records from {dataset_path}.")
+    except Exception as e:
+        click.echo(f"Error loading dataset: {e}", err=True)
+        raise click.Abort()
