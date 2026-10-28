@@ -152,12 +152,38 @@ def main():
         }
 
         if not allowed_parsers:
-            logger.error(f"No supported document types found. Supported types are: {list(parsers.keys())}")
+            logger.error(
+                f"No supported document types found. Supported types are: {list(parsers.keys())}"
+            )
             # Record failed ingestion before exiting
             metadata_store.add_record(
-                {"document_id": ingestion_process_id, "status": "failed", "details": "No supported document types specified or found."}
+                {
+                    "document_id": ingestion_process_id,
+                    "status": "failed",
+                    "details": "No supported document types specified or found.",
+                }
             )
             sys.exit(1)
+
+        # Calculate total files to be processed for logging purposes
+        files_to_process = []
+        for doc_type in allowed_parsers.keys():
+            files_to_process.extend(list(input_dir.rglob(f"*.{doc_type}")))
+        total_files_count = len(files_to_process)
+        logger.info(f"Identified {total_files_count} files for ingestion.")
+
+        if total_files_count == 0:
+            logger.warning(
+                f"No files of specified types found in {input_dir}. Nothing to ingest."
+            )
+            metadata_store.add_record(
+                {
+                    "document_id": ingestion_process_id,
+                    "status": "completed",
+                    "details": f"Ingestion process completed successfully for directory: {input_dir}, no files found to ingest.",
+                }
+            )
+            sys.exit(0)
 
         # The processor.process_documents method is designed to handle the file discovery,
         # type determination, parsing, and then calls to the text_splitter, embedding_provider,
@@ -170,16 +196,26 @@ def main():
 
         # Record successful ingestion
         metadata_store.add_record(
-            {"document_id": ingestion_process_id, "status": "completed", "details": f"Ingestion process completed successfully for directory: {input_dir}"}
+            {
+                "document_id": ingestion_process_id,
+                "status": "completed",
+                "details": f"Ingestion process completed successfully for directory: {input_dir}. {total_files_count} files processed.",
+            }
         )
-        logger.info("Document ingestion completed successfully.")
+        logger.info(
+            f"Document ingestion completed successfully. {total_files_count} files processed."
+        )
 
     except Exception as e:
         # Record failed ingestion
         # Check if metadata_store was initialized, in case an error occurs very early
-        if 'metadata_store' in locals() and 'ingestion_process_id' in locals():
+        if "metadata_store" in locals() and "ingestion_process_id" in locals():
             metadata_store.add_record(
-                {"document_id": ingestion_process_id, "status": "failed", "details": f"Ingestion process failed for directory: {input_dir} with error: {e}"}
+                {
+                    "document_id": ingestion_process_id,
+                    "status": "failed",
+                    "details": f"Ingestion process failed for directory: {input_dir} with error: {e}",
+                }
             )
         logger.error(f"An error occurred during ingestion: {e}")
         sys.exit(1)
