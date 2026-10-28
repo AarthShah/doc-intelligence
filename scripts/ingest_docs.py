@@ -13,6 +13,7 @@ from src.doc_intelligence.cli.ingestion import main as ingestion_main
 from src.doc_intelligence.chunking.recursive_character_text_splitter import (
     RecursiveCharacterTextSplitter,
 )
+from src.doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from src.doc_intelligence.embedding.fastembed_provider import FastembedProvider
 from src.doc_intelligence.ingestion.html_parser import HTMLParser
 from src.doc_intelligence.ingestion.markdown_parser import MarkdownParser
@@ -69,6 +70,13 @@ def parse_args():
         help="Overlap between consecutive text chunks.",
     )
     parser.add_argument(
+        "--chunker_type",
+        type=str,
+        default="recursive",
+        choices=["recursive", "semantic"],
+        help="Type of chunker to use: 'recursive' or 'semantic'.",
+    )
+    parser.add_argument(
         "--vector_store_path",
         type=str,
         default="doc_intelligence.db",
@@ -94,15 +102,24 @@ def main():
     logger.info(f"Document types to process: {args.doc_types}")
     logger.info(f"Embedding model: {args.embedding_model}")
     logger.info(f"Chunk size: {args.chunk_size}, Chunk overlap: {args.chunk_overlap}")
+    logger.info(f"Chunker type: {args.chunker_type}")
     logger.info(f"Vector store path: {args.vector_store_path}")
 
     try:
         # Initialize components
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=args.chunk_size, chunk_overlap=args.chunk_overlap
-        )
         embedding_provider = FastembedProvider(model_name=embedding_model_name)
         vector_store = SQLiteVectorStore(db_path=args.vector_store_path)
+
+        # Initialize chunker based on user preference
+        if args.chunker_type == "semantic":
+            text_splitter = SemanticChunker(
+                max_chunk_size=args.chunk_size, min_chunk_size=args.chunk_overlap
+            )  # Assuming min_chunk_size maps to min_chunk_size for SemanticChunker
+        else:  # Default to recursive
+            text_splitter = RecursiveCharacterTextSplitter(
+                chunk_size=args.chunk_size, chunk_overlap=args.chunk_overlap
+            )
+
         processor = Processor(
             text_splitter=text_splitter,
             embedding_provider=embedding_provider,
