@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
@@ -47,18 +48,22 @@ class SQLiteMetadataStore(MetadataStore):
 
     def _initialize_db(self):
         """Creates the metadata table if it does not exist."""
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS ingestion_metadata (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    document_id TEXT NOT NULL,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    status TEXT,
-                    details TEXT
-                )
-            """)
-            conn.commit()
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS ingestion_metadata (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        document_id TEXT NOT NULL,
+                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        status TEXT,
+                        details TEXT
+                    )
+                """)
+                conn.commit()
+        except sqlite3.Error as e:
+            logging.error(f"Database error during initialization: {e}")
+            raise
 
     def add_record(self, record: Dict[str, Any]) -> None:
         """
@@ -68,13 +73,17 @@ class SQLiteMetadataStore(MetadataStore):
             record: A dictionary containing the ingestion metadata. Expected keys:
                     'document_id', 'status', 'details'.
         """
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO ingestion_metadata (document_id, status, details)
-                VALUES (:document_id, :status, :details)
-            """, record)
-            conn.commit()
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    INSERT INTO ingestion_metadata (document_id, status, details)
+                    VALUES (:document_id, :status, :details)
+                """, record)
+                conn.commit()
+        except sqlite3.Error as e:
+            logging.error(f"Database error adding record for document {record.get('document_id', 'N/A')}: {e}")
+            raise
 
     def get_records(self, document_id: str = None) -> List[Dict[str, Any]]:
         """
@@ -86,15 +95,19 @@ class SQLiteMetadataStore(MetadataStore):
         Returns:
             A list of dictionaries, where each dictionary represents an ingestion record.
         """
-        with sqlite3.connect(self.db_path) as conn:
-            conn.row_factory = sqlite3.Row  # Return rows as dictionary-like objects
-            cursor = conn.cursor()
-            query = "SELECT id, document_id, timestamp, status, details FROM ingestion_metadata"
-            params = {}
-            if document_id:
-                query += " WHERE document_id = :document_id"
-                params["document_id"] = document_id
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                conn.row_factory = sqlite3.Row  # Return rows as dictionary-like objects
+                cursor = conn.cursor()
+                query = "SELECT id, document_id, timestamp, status, details FROM ingestion_metadata"
+                params = {}
+                if document_id:
+                    query += " WHERE document_id = :document_id"
+                    params["document_id"] = document_id
 
-            cursor.execute(query, params)
-            records = [dict(row) for row in cursor.fetchall()]
-            return records
+                cursor.execute(query, params)
+                records = [dict(row) for row in cursor.fetchall()]
+                return records
+        except sqlite3.Error as e:
+            logging.error(f"Database error retrieving records for document {document_id if document_id else 'all'}: {e}")
+            raise

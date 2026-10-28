@@ -21,6 +21,7 @@ from src.doc_intelligence.ingestion.pdf_extractor import MultiColumnPDFExtractor
 from src.doc_intelligence.ingestion.processor import Processor
 from src.doc_intelligence.ingestion.text_parser import TextParser
 from src.doc_intelligence.storage.sqlite_vector_store import SQLiteVectorStore
+from src.doc_intelligence.metadata_store import SQLiteMetadataStore
 
 # Configure logging
 logging.basicConfig(
@@ -109,6 +110,14 @@ def main():
         # Initialize components
         embedding_provider = FastembedProvider(model_name=embedding_model_name)
         vector_store = SQLiteVectorStore(db_path=args.vector_store_path)
+        metadata_store = SQLiteMetadataStore()
+
+        ingestion_process_id = str(input_dir) # Using input directory path as a unique ID for this ingestion process
+
+        # Record ingestion start
+        metadata_store.add_record(
+            {"document_id": ingestion_process_id, "status": "started", "details": f"Ingestion process started for directory: {input_dir}"}
+        )
 
         # Initialize chunker based on user preference
         if args.chunker_type == "semantic":
@@ -144,6 +153,10 @@ def main():
 
         if not allowed_parsers:
             logger.error(f"No supported document types found. Supported types are: {list(parsers.keys())}")
+            # Record failed ingestion before exiting
+            metadata_store.add_record(
+                {"document_id": ingestion_process_id, "status": "failed", "details": "No supported document types specified or found."}
+            )
             sys.exit(1)
 
         # The processor.process_documents method is designed to handle the file discovery,
@@ -155,9 +168,19 @@ def main():
         # and use the corresponding parser instance for each file.
         processor.process_documents(input_dir=input_dir, parsers=allowed_parsers)
 
+        # Record successful ingestion
+        metadata_store.add_record(
+            {"document_id": ingestion_process_id, "status": "completed", "details": f"Ingestion process completed successfully for directory: {input_dir}"}
+        )
         logger.info("Document ingestion completed successfully.")
 
     except Exception as e:
+        # Record failed ingestion
+        # Check if metadata_store was initialized, in case an error occurs very early
+        if 'metadata_store' in locals() and 'ingestion_process_id' in locals():
+            metadata_store.add_record(
+                {"document_id": ingestion_process_id, "status": "failed", "details": f"Ingestion process failed for directory: {input_dir} with error: {e}"}
+            )
         logger.error(f"An error occurred during ingestion: {e}")
         sys.exit(1)
 
