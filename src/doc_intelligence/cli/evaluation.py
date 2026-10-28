@@ -1,6 +1,7 @@
 import csv
 import json
 import click
+from doc_intelligence.evaluation import UnifiedRAGEvaluator
 
 @click.group()
 def evaluate() -> None:
@@ -30,6 +31,10 @@ def run(dataset_path: str, model_config: str, metrics: tuple) -> None:
             click.echo("Error: Unsupported dataset file format. Please provide a .json or .csv file.", err=True)
             raise click.Abort()
         click.echo(f"Successfully loaded {len(dataset)} records from {dataset_path}.")
+
+        evaluator = UnifiedRAGEvaluator(model_config=model_config, metrics=list(metrics))
+        results = evaluator.evaluate(dataset)
+        click.echo(f"Evaluation completed successfully. Results: {json.dumps(results, indent=2)}")
     except Exception as e:
-        click.echo(f"Error loading dataset: {e}", err=True)
+        click.echo(f"Error loading dataset or running evaluation: {e}", err=True)
         raise click.Abort()
