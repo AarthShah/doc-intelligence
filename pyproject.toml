@@ -28,6 +28,7 @@ dependencies = [
 
 [project.scripts]
 ingest-docs = "doc_intelligence.cli.ingestion:main"
+evaluation-cli = "doc_intelligence.cli.evaluation:main"
 
 [project.optional-dependencies]
 api = [
