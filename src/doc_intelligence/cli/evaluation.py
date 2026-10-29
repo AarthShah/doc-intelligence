@@ -33,8 +33,24 @@ def run(dataset_path: str, model_config: str, metrics: tuple) -> None:
         click.echo(f"Successfully loaded {len(dataset)} records from {dataset_path}.")
 
         evaluator = UnifiedRAGEvaluator(model_config=model_config, metrics=list(metrics))
-        results = evaluator.evaluate(dataset)
-        click.echo(f"Evaluation completed successfully. Results: {json.dumps(results, indent=2)}")
+        all_results = []
+        for i, record in enumerate(dataset):
+            click.echo(f"Evaluating record {i+1}/{len(dataset)}...")
+            try:
+                record_results = evaluator.evaluate([record]) # Expects a list of records
+                all_results.append(record_results)
+            except Exception as e:
+                click.echo(f"Error evaluating record {i+1}: {e}", err=True)
+                # Optionally, append an error indicator or skip this record
+                all_results.append({"error": str(e), "record_index": i})
+
+        click.echo(f"Evaluation completed successfully. Collected {len(all_results)} results.")
+        # You might want to format `all_results` more nicely, e.g., save to a file
+        # For now, printing a summary or the first few results for brevity.
+        click.echo(f"Sample results (first 3 records): {json.dumps(all_results[:3], indent=2)}")
+        # If you want to see all results, uncomment the line below
+        # click.echo(f"All results: {json.dumps(all_results, indent=2)}")
+
     except Exception as e:
-        click.echo(f"Error loading dataset or running evaluation: {e}", err=True)
+        click.echo(f"Error loading dataset or initializing evaluator: {e}", err=True)
         raise click.Abort()
