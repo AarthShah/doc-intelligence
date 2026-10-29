@@ -1,7 +1,11 @@
 import csv
 import json
 import click
+import logging
 from doc_intelligence.evaluation import UnifiedRAGEvaluator
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 @click.group()
 def evaluate() -> None:
@@ -16,9 +20,9 @@ def evaluate() -> None:
 @click.option("--output-path", "-o", type=click.Path(dir_okay=False), help="Path to save the evaluation results (JSON or CSV).")
 def run(dataset_path: str, model_config: str, metrics: tuple, output_path: str = None) -> None:
     """Run batch evaluation on a test dataset."""
-    click.echo(f"Running evaluation with dataset: {dataset_path}")
-    click.echo(f"Using model configuration: {model_config}")
-    click.echo(f"Metrics: {', '.join(metrics)}")
+    logger.info(f"Starting evaluation with dataset: {dataset_path}")
+    logger.info(f"Using model configuration: {model_config}")
+    logger.info(f"Metrics: {', '.join(metrics)}")
 
     all_results = [] # Initialize all_results here
 
@@ -31,14 +35,14 @@ def run(dataset_path: str, model_config: str, metrics: tuple, output_path: str =
                 reader = csv.DictReader(f)
                 dataset = list(reader)
         else:
-            click.echo("Error: Unsupported dataset file format. Please provide a .json or .csv file.", err=True)
+            logger.error("Unsupported dataset file format. Please provide a .json or .csv file.")
             raise click.Abort()
-        click.echo(f"Successfully loaded {len(dataset)} records from {dataset_path}.")
+        logger.info(f"Successfully loaded {len(dataset)} records from {dataset_path}.")
 
         evaluator = UnifiedRAGEvaluator(model_config=model_config, metrics=list(metrics))
         
         for i, record in enumerate(dataset):
-            click.echo(f"Evaluating record {i+1}/{len(dataset)}...")
+            logger.info(f"Evaluating record {i+1}/{len(dataset)}...")
             try:
                 # Ensure that each record is a dict, if not, wrap it
                 if not isinstance(record, dict):
@@ -52,11 +56,13 @@ def run(dataset_path: str, model_config: str, metrics: tuple, output_path: str =
                 else:
                     all_results.append(record_results) # Append if it's a single dict
 
+                logger.debug(f"Results for record {i+1}: {record_results}")
+
             except Exception as e:
-                click.echo(f"Error evaluating record {i+1}: {e}", err=True)
+                logger.error(f"Error evaluating record {i+1}: {e}", exc_info=True)
                 all_results.append({"error": str(e), "record_index": i})
 
-        click.echo(f"Evaluation completed successfully. Collected {len(all_results)} results.")
+        logger.info(f"Evaluation completed successfully. Collected {len(all_results)} results.")
 
         # Calculate and display aggregated results
         if all_results:
@@ -84,15 +90,15 @@ def run(dataset_path: str, model_config: str, metrics: tuple, output_path: str =
                     else:
                         summary[metric] = "No scores available"
                 
-                click.echo("\n--- Aggregated Evaluation Results ---")
-                click.echo(json.dumps(summary, indent=2))
-                click.echo("-------------------------------------")
+                logger.info("--- Aggregated Evaluation Results ---")
+                logger.info(json.dumps(summary, indent=2))
+                logger.info("-------------------------------------")
 
             error_records = [res for res in all_results if isinstance(res, dict) and "error" in res]
             if error_records:
-                click.echo(f"\nEncountered errors in {len(error_records)} records:")
+                logger.warning(f"Encountered errors in {len(error_records)} records:")
                 for error_record in error_records:
-                    click.echo(f"  Record {error_record.get('record_index', 'N/A')}: {error_record['error']}")
+                    logger.warning(f"  Record {error_record.get('record_index', 'N/A')}: {error_record['error']}")
         
         # Handle saving results to a file
         if output_path:
@@ -102,7 +108,7 @@ def run(dataset_path: str, model_config: str, metrics: tuple, output_path: str =
                         json.dump(all_results, f, indent=2)
                 elif output_path.endswith(".csv"):
                     if not all_results:
-                         click.echo("No results to save to CSV.")
+                         logger.warning("No results to save to CSV.")
                          return
 
                     headers = None
@@ -128,20 +134,20 @@ def run(dataset_path: str, model_config: str, metrics: tuple, output_path: str =
                             writer.writeheader()
                             writer.writerows(flat_data)
                     else:
-                        click.echo("Could not determine CSV headers.")
+                        logger.warning("Could not determine CSV headers.")
                 else:
-                    click.echo(f"Unsupported output file format for {output_path}. Please use .json or .csv.", err=True)
+                    logger.error(f"Unsupported output file format for {output_path}. Please use .json or .csv.")
                     
-                click.echo(f"Results saved to {output_path}")
+                logger.info(f"Results saved to {output_path}")
             except Exception as e:
-                click.echo(f"Error saving results to {output_path}: {e}", err=True)
+                logger.error(f"Error saving results to {output_path}: {e}", exc_info=True)
         else:
             # Original behavior if no output path is specified
             if all_results:
-                click.echo(f"Sample results (first 3 records): {json.dumps(all_results[:3], indent=2)}")
+                logger.info(f"Sample results (first 3 records): {json.dumps(all_results[:3], indent=2)}")
             else:
-                click.echo("No results to display.")
+                logger.info("No results to display.")
 
     except Exception as e:
-        click.echo(f"Error during evaluation process: {e}", err=True)
+        logger.error(f"Error during evaluation process: {e}", exc_info=True)
         raise click.Abort()
