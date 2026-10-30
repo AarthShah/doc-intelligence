@@ -3,8 +3,9 @@ import json
 import click
 import logging
 from doc_intelligence.evaluation import UnifiedRAGEvaluator
+from doc_intelligence.logging_config import setup_logging
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+setup_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @click.group()
