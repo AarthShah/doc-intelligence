@@ -14,6 +14,7 @@ except ImportError:
     Field = lambda *args, **kwargs: None  # type: ignore
 
 from doc_intelligence import __version__
+from doc_intelligence.logging_config import setup_logging
 from doc_intelligence.api.dependencies.rate_limiter import RateLimiter
 from doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
@@ -49,7 +50,8 @@ def initialize_database():
     conn.commit()
     conn.close()
 
-# Initialize the database when the module is loaded
+# Initialize logging and database when the module is loaded
+setup_logging()
 initialize_database()
 # --- End Database Setup ---
 
