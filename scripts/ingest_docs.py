@@ -23,10 +23,10 @@ from src.doc_intelligence.ingestion.text_parser import TextParser
 from src.doc_intelligence.storage.sqlite_vector_store import SQLiteVectorStore
 from src.doc_intelligence.metadata_store import SQLiteMetadataStore
 
+from src.doc_intelligence.logging_config import setup_logging
+
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+setup_logging(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 EMBEDDING_MODELS = {
