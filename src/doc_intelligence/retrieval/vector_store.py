@@ -4,6 +4,7 @@ import math
 import re
 from typing import Dict, List, Tuple
 from doc_intelligence.models import Chunk, QueryResult
+from .exceptions import VectorStoreError
 
 
 def simple_hash_embedding(text: str, dim: int = 128) -> List[float]:
@@ -41,34 +42,43 @@ class VectorStore:
 
     def add_chunks(self, chunks: List[Chunk]) -> None:
         """Add chunks to index and generate embeddings if absent."""
-        for c in chunks:
-            if not c.embedding:
-                c.embedding = simple_hash_embedding(c.text, dim=self.embedding_dim)
-            self.chunks.append(c)
+        try:
+            for c in chunks:
+                if not c.embedding:
+                    c.embedding = simple_hash_embedding(c.text, dim=self.embedding_dim)
+                self.chunks.append(c)
+        except Exception as e:
+            raise VectorStoreError("Failed to add chunks to vector store") from e
 
     def search(self, query: str, top_k: int = 5) -> List[QueryResult]:
         """Perform semantic search against indexed chunks."""
         if not self.chunks:
             return []
 
-        query_vec = simple_hash_embedding(query, dim=self.embedding_dim)
-        scored: List[Tuple[float, Chunk]] = []
+        try:
+            query_vec = simple_hash_embedding(query, dim=self.embedding_dim)
+            scored: List[Tuple[float, Chunk]] = []
 
-        for chunk in self.chunks:
-            sim = cosine_similarity(query_vec, chunk.embedding or [])
-            scored.append((sim, chunk))
+            for chunk in self.chunks:
+                sim = cosine_similarity(query_vec, chunk.embedding or [])
+                scored.append((sim, chunk))
 
-        scored.sort(key=lambda x: x[0], reverse=True)
+            scored.sort(key=lambda x: x[0], reverse=True)
 
-        results = [
-            QueryResult(chunk=chunk, score=score, retrieval_method="dense")
-            for score, chunk in scored[:top_k]
-        ]
-        return results
+            results = [
+                QueryResult(chunk=chunk, score=score, retrieval_method="dense")
+                for score, chunk in scored[:top_k]
+            ]
+            return results
+        except Exception as e:
+            raise VectorStoreError("Failed to search vector store") from e
 
     def clear(self) -> None:
         """Clear all indexed chunks."""
-        self.chunks.clear()
+        try:
+            self.chunks.clear()
+        except Exception as e:
+            raise VectorStoreError("Failed to clear vector store") from e
 
     @property
     def count(self) -> int:
