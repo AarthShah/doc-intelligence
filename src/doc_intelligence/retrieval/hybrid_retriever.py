@@ -3,6 +3,7 @@
 import json
 import logging
 from typing import Dict, List
+from doc_intelligence.exceptions import RetrievalError, VectorStoreError
 from doc_intelligence.models import Chunk, QueryResult
 from doc_intelligence.retrieval.bm25_search import BM25Retriever
 from doc_intelligence.retrieval.vector_store import VectorStore
@@ -21,8 +22,11 @@ class HybridRetriever:
 
     def index(self, chunks: List[Chunk]) -> None:
         """Index chunks in both dense and lexical stores."""
-        self.vector_store.add_chunks(chunks)
-        self.bm25.index(chunks)
+        try:
+            self.vector_store.add_chunks(chunks)
+            self.bm25.index(chunks)
+        except (VectorStoreError, Exception) as e:
+            raise RetrievalError(f"Failed to index chunks: {e}") from e
 
     def search(self, query: str, top_k: int = 5) -> List[QueryResult]:
         """Execute hybrid search with Reciprocal Rank Fusion."""
@@ -34,7 +38,13 @@ class HybridRetriever:
             })
         )
 
-        dense_results = self.vector_store.search(query, top_k=top_k * 2)
+        try:
+            dense_results = self.vector_store.search(query, top_k=top_k * 2)
+        except VectorStoreError as e:
+            raise RetrievalError(f"Vector store search failed: {e}") from e
+        except Exception as e:
+            raise RetrievalError(f"Unexpected error during dense search: {e}") from e
+
         logger.info(
             json.dumps({
                 "event": "dense_search_completed",
@@ -44,7 +54,10 @@ class HybridRetriever:
             })
         )
 
-        bm25_results = self.bm25.search(query, top_k=top_k * 2)
+        try:
+            bm25_results = self.bm25.search(query, top_k=top_k * 2)
+        except Exception as e:
+            raise RetrievalError(f"BM25 search failed: {e}") from e
         logger.info(
             json.dumps({
                 "event": "bm25_search_completed",
