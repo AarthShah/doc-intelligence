@@ -147,5 +147,12 @@ async def search_endpoint(
         return SearchResponse(results=search_results)
 
     except Exception as e:
+        from doc_intelligence.exceptions import RetrievalError, VectorStoreError, DocumentIntelligenceError
         print(f"An error occurred during search: {e}")
+        if isinstance(e, RetrievalError):
+            raise HTTPException(status_code=400, detail=str(e))
+        elif isinstance(e, VectorStoreError):
+            raise HTTPException(status_code=500, detail=str(e))
+        elif isinstance(e, DocumentIntelligenceError):
+            raise HTTPException(status_code=500, detail=str(e))
         raise HTTPException(status_code=500, detail="An error occurred during the search process.")

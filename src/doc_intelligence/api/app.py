@@ -121,39 +121,59 @@ if FASTAPI_AVAILABLE:
         req: IngestRequest,
         redact_pii: bool = False,
     ) -> Dict[str, Any]:
-        sanitizer = DocumentSanitizer() if redact_pii else None
-        doc = parser.parse(req.text, source_name=req.source_name, sanitizer=sanitizer)
-        chunks = chunker.chunk(doc)
-        retriever.index(chunks)
-        return {
-            "message": "Document ingested and indexed successfully",
-            "doc_id": doc.id,
-            "chunks_created": len(chunks),
-            "total_index_count": retriever.vector_store.count,
-        }
+        try:
+            sanitizer = DocumentSanitizer() if redact_pii else None
+            doc = parser.parse(req.text, source_name=req.source_name, sanitizer=sanitizer)
+            chunks = chunker.chunk(doc)
+            retriever.index(chunks)
+            return {
+                "message": "Document ingested and indexed successfully",
+                "doc_id": doc.id,
+                "chunks_created": len(chunks),
+                "total_index_count": retriever.vector_store.count,
+            }
+        except Exception as e:
+            from doc_intelligence.exceptions import ParsingError, VectorStoreError, DocumentIntelligenceError
+            if isinstance(e, ParsingError):
+                raise HTTPException(status_code=400, detail=str(e))
+            elif isinstance(e, VectorStoreError):
+                raise HTTPException(status_code=500, detail=str(e))
+            elif isinstance(e, DocumentIntelligenceError):
+                raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e))
 
     @app.post("/query")
     def search_documents(
         request: Request,
         req: QueryRequest,
     ) -> Dict[str, Any]:
-        results = retriever.search(req.query, top_k=req.top_k)
-        formatted_results = []
-        for r in results:
-            text = r.chunk.text
-            if req.compress_context:
-                text = context_compressor.compress(text)
-            formatted_results.append({
-                "text": text,
-                "score": r.score,
-                "chunk_id": r.chunk.id,
-                "method": r.retrieval_method,
-            })
-        return {
-            "query": req.query,
-            "results_count": len(results),
-            "results": formatted_results,
-        }
+        try:
+            results = retriever.search(req.query, top_k=req.top_k)
+            formatted_results = []
+            for r in results:
+                text = r.chunk.text
+                if req.compress_context:
+                    text = context_compressor.compress(text)
+                formatted_results.append({
+                    "text": text,
+                    "score": r.score,
+                    "chunk_id": r.chunk.id,
+                    "method": r.retrieval_method,
+                })
+            return {
+                "query": req.query,
+                "results_count": len(results),
+                "results": formatted_results,
+            }
+        except Exception as e:
+            from doc_intelligence.exceptions import RetrievalError, VectorStoreError, DocumentIntelligenceError
+            if isinstance(e, RetrievalError):
+                raise HTTPException(status_code=400, detail=str(e))
+            elif isinstance(e, VectorStoreError):
+                raise HTTPException(status_code=500, detail=str(e))
+            elif isinstance(e, DocumentIntelligenceError):
+                raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail=str(e))
 
     @app.post("/api/v1/evaluate")
     def evaluate_rag(

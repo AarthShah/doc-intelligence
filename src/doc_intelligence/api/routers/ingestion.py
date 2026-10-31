@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Depends
+from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Depends, HTTPException
 from typing import List
 from pydantic import BaseModel
 from doc_intelligence.api.ingestion import process_document, IngestionResponse
@@ -30,5 +30,15 @@ async def ingest_document(request: DocumentIngestRequest, background_tasks: Back
     Ingests a document payload containing content and metadata,
     and initiates asynchronous chunking via background tasks.
     """
-    background_tasks.add_task(process_document, request.content, request.metadata)
-    return IngestionResponse(message="Document ingestion initiated.", status="processing")
+    try:
+        background_tasks.add_task(process_document, request.content, request.metadata)
+        return IngestionResponse(message="Document ingestion initiated.", status="processing")
+    except Exception as e:
+        from doc_intelligence.exceptions import ParsingError, VectorStoreError, DocumentIntelligenceError
+        if isinstance(e, ParsingError):
+            raise HTTPException(status_code=400, detail=str(e))
+        elif isinstance(e, VectorStoreError):
+            raise HTTPException(status_code=500, detail=str(e))
+        elif isinstance(e, DocumentIntelligenceError):
+            raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
