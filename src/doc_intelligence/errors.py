@@ -17,3 +17,17 @@ class UnsupportedDocumentTypeError(ParsingError):
 
     def __init__(self, message: str):
         super().__init__(message)
+
+
+class RetrievalError(DocIntelligenceError):
+    """Exception raised for general errors during retrieval."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+
+
+class VectorStoreError(RetrievalError):
+    """Exception raised for errors specific to the vector store operations."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
