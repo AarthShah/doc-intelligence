@@ -106,6 +106,29 @@ class VectorStore:
         except Exception as e:
             raise VectorStoreError("Failed to add chunks to vector store") from e
 
+    def add(self, chunk: Chunk) -> None:
+        """Add a single chunk to the index and generate embedding if absent."""
+        try:
+            if not chunk.embedding:
+                chunk.embedding = simple_hash_embedding(chunk.text, dim=self.embedding_dim)
+            self.chunks.append(chunk)
+            self._save_index()
+        except Exception as e:
+            raise VectorStoreError("Failed to add chunk to vector store") from e
+
+    def delete(self, chunk_id: str) -> None:
+        """Delete a chunk from the index by its ID."""
+        try:
+            initial_count = len(self.chunks)
+            self.chunks = [c for c in self.chunks if c.id != chunk_id]
+            if len(self.chunks) < initial_count:
+                self._save_index()
+            else:
+                # Optionally, raise an error or log if the chunk_id was not found
+                pass
+        except Exception as e:
+            raise VectorStoreError(f"Failed to delete chunk {chunk_id} from vector store") from e
+
     def search(self, query: str, top_k: int = 5) -> List[QueryResult]:
         """Perform semantic search against indexed chunks."""
         if not self.chunks:
@@ -142,6 +165,7 @@ class VectorStore:
                 self.mm.seek(0)
                 self.mm.write(b'\0' * len(self.mm))
                 self.mm.flush()
+            self._save_index() # Ensure the cleared state is persisted
         except Exception as e:
             raise VectorStoreError("Failed to clear vector store") from e
 
