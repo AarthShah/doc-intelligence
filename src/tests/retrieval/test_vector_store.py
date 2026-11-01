@@ -88,5 +88,55 @@ def test_vector_store_empty_persistence():
     if os.path.exists(file_path):
         os.remove(file_path)
 
+def test_vector_store_index_caching():
+    file_path = "cache_test_vector_store.db"
+    dimension = 128
+    vectors = [[float(i) * 0.1] * dimension for i in range(5)]
+    metadata = [{"id": i} for i in range(5)]
+
+    # Test initial load and cache population
+    store1 = VectorStore(dimension=dimension, db_path=file_path)
+    store1.add(vectors=vectors, metadata=metadata)
+    store1.close()
+
+    # When VectorStore is initialized, it should load from DB and populate cache
+    store2 = VectorStore(dimension=dimension, db_path=file_path)
+    # Accessing data through get_all_data should utilize the cache
+    loaded_vectors, loaded_metadata = store2.get_all_data()
+    assert len(loaded_vectors) == len(vectors)
+    assert len(loaded_metadata) == len(metadata)
+    assert loaded_vectors == vectors
+    assert loaded_metadata == metadata
+    store2.close()
+
+    # Test add operation updates cache
+    store3 = VectorStore(dimension=dimension, db_path=file_path)
+    new_vector = [[0.5] * dimension]
+    new_metadata = [{"id": 5}]
+    store3.add(vectors=new_vector, metadata=new_metadata)
+    # Accessing data should now include the new entry
+    loaded_vectors_after_add, loaded_metadata_after_add = store3.get_all_data()
+    assert len(loaded_vectors_after_add) == len(vectors) + 1
+    assert len(loaded_metadata_after_add) == len(metadata) + 1
+    assert loaded_vectors_after_add[-1] == new_vector[0]
+    assert loaded_metadata_after_add[-1] == new_metadata[0]
+    store3.close()
+
+    # Test delete operation updates cache
+    store4 = VectorStore(dimension=dimension, db_path=file_path)
+    store4.delete(ids=[0, 2, 5]) # Delete some existing and the newly added
+    remaining_vectors, remaining_metadata = store4.get_all_data()
+    assert len(remaining_vectors) == 3
+    assert len(remaining_metadata) == 3
+    # Check that the correct items remain
+    expected_ids = {1, 3, 4}
+    actual_ids = {m["id"] for m in remaining_metadata}
+    assert actual_ids == expected_ids
+    store4.close()
+
+    # Clean up the test file
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
 # Note: Concurrency testing might require a more sophisticated setup
 # involving threading or multiprocessing, which could be a separate test suite.
