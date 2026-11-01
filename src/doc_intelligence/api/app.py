@@ -57,7 +57,8 @@ initialize_database()
 
 
 # Global retriever & evaluator instances for the service
-retriever = HybridRetriever()
+VECTOR_STORE_PATH = os.environ.get("DOC_INTELLIGENCE_VECTOR_STORE_PATH", "vector_store.idx")
+retriever = HybridRetriever(persist_path=VECTOR_STORE_PATH)
 evaluator = RAGEvaluator()
 parser = TextParser()
 chunker = SemanticChunker(max_chunk_size=300)
