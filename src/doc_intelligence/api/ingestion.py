@@ -2,6 +2,7 @@ from typing import List, Optional
 from fastapi import APIRouter, File, Form, UploadFile, status, BackgroundTasks, HTTPException, Depends
 from pydantic import BaseModel, Field
 import asyncio
+import os
 from datetime import datetime
 
 # Import the placeholder processing function
@@ -17,10 +18,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Configuration for vector store storage path
+VECTOR_STORE_PATH = os.getenv("VECTOR_STORE_PATH", "./vector_store_data")
+
 # Placeholder for background task
 async def _ingest_document_background(metadata_store: get_metadata_store, content: str, metadata: dict, chunk_size: Optional[int], chunk_overlap: Optional[int]):
     """Placeholder for the actual document ingestion and chunking logic."""
     filename = metadata.get("filename", "unknown")
+    storage_path = VECTOR_STORE_PATH
     try:
         print(f"Processing document: {filename}")
         # Update metadata store with processing status
