@@ -91,11 +91,20 @@ class VectorStore:
         except Exception as e:
             raise VectorStoreError("Failed to save index to memory-mapped file") from e
 
-    def __del__(self):
-        """Ensure the index is saved when the object is garbage collected."""
+    def close(self) -> None:
+        """Close the memory-mapped file and release resources safely."""
         if self.mm:
-            self._save_index()
-            self.mm.close()
+            try:
+                self._save_index()
+            finally:
+                try:
+                    self.mm.close()
+                finally:
+                    self.mm = None
+
+    def __del__(self):
+        """Ensure the index is saved and resources are released when the object is garbage collected."""
+        self.close()
 
     def add_chunks(self, chunks: List[Chunk]) -> None:
         """Add chunks to index and generate embeddings if absent."""
