@@ -114,6 +114,8 @@ class VectorStore:
                 chunk.embedding = simple_hash_embedding(chunk.text, dim=self.embedding_dim)
             self.chunks.append(chunk)
             self._save_index()
+            # Clear cache on add
+            self._cache.clear()
         except Exception as e:
             raise VectorStoreError("Failed to add chunk to vector store") from e
 
@@ -124,6 +126,8 @@ class VectorStore:
             self.chunks = [c for c in self.chunks if c.id != chunk_id]
             if len(self.chunks) < initial_count:
                 self._save_index()
+                # Clear cache on delete
+                self._cache.clear()
             else:
                 # Optionally, raise an error or log if the chunk_id was not found
                 pass
