@@ -43,6 +43,7 @@ class VectorStore:
         self.chunks: List[Chunk] = []
         self.storage_path = storage_path
         self.mm = None
+        self._cache: Dict[str, List[QueryResult]] = {}  # Cache for search results
 
         if self.storage_path:
             try:
