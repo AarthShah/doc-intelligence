@@ -194,6 +194,10 @@ def main():
         # and use the corresponding parser instance for each file.
         processor.process_documents(input_dir=input_dir, parsers=allowed_parsers)
 
+        # Persist vector store changes if supported
+        if hasattr(vector_store, "persist"):
+            vector_store.persist()
+
         # Record successful ingestion
         metadata_store.add_record(
             {
