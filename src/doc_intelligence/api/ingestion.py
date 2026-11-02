@@ -3,6 +3,7 @@ from fastapi import APIRouter, File, Form, UploadFile, status, BackgroundTasks, 
 from pydantic import BaseModel, Field
 import asyncio
 import os
+import multiprocessing
 from datetime import datetime
 
 # Import the placeholder processing function
@@ -68,6 +69,15 @@ class IngestionResponse(BaseModel):
     status: str = "received"
 
 
+def _process_documents_parallel(file_names: List[str], chunk_size: Optional[int], chunk_overlap: Optional[int], num_workers: int):
+    """Process documents in parallel using multiprocessing Pool."""
+    workers = num_workers if num_workers > 0 else multiprocessing.cpu_count()
+    with multiprocessing.Pool(processes=workers) as pool:
+        # Assuming process_documents or individual file processing can be mapped or called.
+        # Here we distribute tasks across the pool.
+        pool.starmap(process_documents, [( [fname], chunk_size, chunk_overlap ) for fname in file_names])
+
+
 @router.post("", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
 async def ingest_documents(
     background_tasks: BackgroundTasks,
@@ -75,8 +85,9 @@ async def ingest_documents(
     files: List[UploadFile] = File(...),
     chunk_size: Optional[int] = Form(None),
     chunk_overlap: Optional[int] = Form(None),
+    num_workers: Optional[int] = Form(None),
 ) -> IngestionResponse:
-    """Accept document file uploads for ingestion and asynchronous chunking."""
+    """Accept document file uploads for ingestion and asynchronous chunking with optional parallel processing."""
     try:
         file_names = []
         for file in files:
@@ -89,10 +100,11 @@ async def ingest_documents(
                     details="File received by API, queued for processing."
                 )
 
-        background_tasks.add_task(process_documents, file_names, chunk_size, chunk_overlap)
+        workers = num_workers if num_workers is not None else multiprocessing.cpu_count()
+        background_tasks.add_task(_process_documents_parallel, file_names, chunk_size, chunk_overlap, workers)
 
         return IngestionResponse(
-            message="Documents received successfully and queued for processing.",
+            message="Documents received successfully and queued for parallel processing.",
             received_files=file_names,
             status="processing",
         )
