@@ -84,6 +84,12 @@ def parse_args():
         default=multiprocessing.cpu_count(),
         help="Number of worker processes to use for parallel ingestion.",
     )
+    parser.add_argument(
+        "--max_workers",
+        type=int,
+        default=None,
+        help="Maximum number of worker processes to use for parallel ingestion (alias for num_workers).",
+    )
     return parser.parse_args()
 
 def process_document(args_tuple):
@@ -219,7 +225,8 @@ def main():
     logger.info(f"Chunk size: {args.chunk_size}, Chunk overlap: {args.chunk_overlap}")
     logger.info(f"Chunker type: {args.chunker_type}")
     logger.info(f"Vector store path: {args.vector_store_path}")
-    logger.info(f"Number of workers: {args.num_workers}")
+    num_workers = args.max_workers if args.max_workers is not None else args.num_workers
+    logger.info(f"Number of workers: {num_workers}")
 
     try:
         # Initialize components that will be shared or used to configure workers
@@ -318,7 +325,7 @@ def main():
         
         results = []
         # Create a Pool with the specified number of workers
-        with multiprocessing.Pool(processes=args.num_workers) as pool:
+        with multiprocessing.Pool(processes=num_workers) as pool:
             # Use pool.map to distribute the tasks. Each task is a tuple of arguments for process_document.
             # The function `process_document` needs to be defined at the top level or imported.
             # It also needs to handle initialization of potentially non-picklable objects like DB connections.
