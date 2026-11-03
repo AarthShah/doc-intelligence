@@ -6,7 +6,7 @@ import re
 import mmap
 import os
 from typing import Dict, List, Tuple
-from doc_intelligence.models import Chunk, QueryResult
+from doc_intelligence.models import Chunk, QueryResult, LLMProvider
 from .exceptions import VectorStoreError
 
 logger = logging.getLogger(__name__)
@@ -41,8 +41,14 @@ def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
 class VectorStore:
     """In-memory vector store indexed by cosine similarity."""
 
-    def __init__(self, storage_path: str | None = None, embedding_dim: int = 128):
+    def __init__(
+        self,
+        storage_path: str | None = None,
+        embedding_dim: int = 128,
+        embedding_provider: LLMProvider | None = None,
+    ):
         self.embedding_dim = embedding_dim
+        self.embedding_provider = embedding_provider
         self.chunks: List[Chunk] = []
         self.storage_path = storage_path
         self.mm = None
@@ -122,7 +128,10 @@ class VectorStore:
             logger.info("Adding batch of %d chunks to vector store", len(chunks))
             for c in chunks:
                 if not c.embedding:
-                    c.embedding = simple_hash_embedding(c.text, dim=self.embedding_dim)
+                    if self.embedding_provider:
+                        c.embedding = self.embedding_provider.generate_embedding(c.text)
+                    else:
+                        c.embedding = simple_hash_embedding(c.text, dim=self.embedding_dim)
                 self.chunks.append(c)
             self._save_index()
             self._cache.clear()
@@ -136,7 +145,10 @@ class VectorStore:
         try:
             logger.info("Adding single chunk id=%s to vector store", getattr(chunk, "id", "unknown"))
             if not chunk.embedding:
-                chunk.embedding = simple_hash_embedding(chunk.text, dim=self.embedding_dim)
+                if self.embedding_provider:
+                    chunk.embedding = self.embedding_provider.generate_embedding(chunk.text)
+                else:
+                    chunk.embedding = simple_hash_embedding(chunk.text, dim=self.embedding_dim)
             self.chunks.append(chunk)
             self._save_index()
             # Clear cache on add
