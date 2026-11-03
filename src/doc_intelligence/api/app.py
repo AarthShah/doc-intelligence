@@ -58,11 +58,24 @@ initialize_database()
 
 # Global retriever & evaluator instances for the service
 VECTOR_STORE_PATH = os.environ.get("DOC_INTELLIGENCE_VECTOR_STORE_PATH", "vector_store.idx")
+EMBEDDING_PROVIDER = os.environ.get("DOC_INTELLIGENCE_EMBEDDING_PROVIDER", "sentence-transformers")
+HUGGINGFACE_API_KEY = os.environ.get("HUGGINGFACE_API_KEY", "")
+
 retriever = HybridRetriever(persist_path=VECTOR_STORE_PATH)
 evaluator = RAGEvaluator()
 parser = TextParser()
 chunker = SemanticChunker(max_chunk_size=300)
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
+if EMBEDDING_PROVIDER == "huggingface":
+    try:
+        from doc_intelligence.embeddings.huggingface_provider import HuggingFaceEmbeddingProvider
+        model_name = os.environ.get("DOC_INTELLIGENCE_HF_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+        embedding_model = HuggingFaceEmbeddingProvider(model_name=model_name, api_key=HUGGINGFACE_API_KEY)
+    except ImportError:
+        embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+else:
+    embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+
 context_compressor = ContextCompressor(embedding_model=embedding_model)
 
 # Instantiate rate limiter for API request throttling

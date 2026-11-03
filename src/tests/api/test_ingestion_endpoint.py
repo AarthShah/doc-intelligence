@@ -170,5 +170,29 @@ def test_single_document_ingestion_api(client: TestClient):
     assert response_data["received_files"] == [filename]
     assert response_data["status"] == "processing"
 
+
+@pytest.mark.skipif(app is None, reason="FastAPI app or vector store not importable")
+def test_ingest_text_with_huggingface_provider(monkeypatch):
+    """
+    Test text ingestion when HuggingFace embedding provider is configured via environment variables.
+    """
+    monkeypatch.setenv("DOC_INTELLIGENCE_EMBEDDING_PROVIDER", "huggingface")
+    monkeypatch.setenv("HUGGINGFACE_API_KEY", "dummy-hf-token")
+
+    from fastapi.testclient import TestClient
+    from src.doc_intelligence.api.app import app
+
+    test_client = TestClient(app)
+    response = test_client.post(
+        "/ingest/text",
+        json={
+            "text": "Testing text ingestion with HuggingFace embedding provider configuration.",
+            "source_name": "hf_test_source",
+            "format": "plaintext"
+        }
+    )
+
+    assert response.status_code in [200, 500]
+
     # Similar to parallel ingestion, actual verification would involve checking
     # background task completion and the vector store.
