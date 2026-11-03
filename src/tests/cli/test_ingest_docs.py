@@ -161,7 +161,7 @@ def test_ingest_docs_parallel_processing(mock_multiprocessing_pool):
                 result = runner.invoke(ingest_docs_main, [
                     str(input_dir),
                     "--doc_types", "txt",
-                    "--num_workers", "4",  # Ensure we are testing parallel execution
+                    "--max-workers", "4",  # Ensure we are testing parallel execution
                     "--vector_store_path", "dummy_db.db" # Provide a dummy path
                 ])
 
