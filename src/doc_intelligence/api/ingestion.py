@@ -69,9 +69,17 @@ class IngestionResponse(BaseModel):
     status: str = "received"
 
 
-def _process_documents_parallel(file_names: List[str], chunk_size: Optional[int], chunk_overlap: Optional[int], num_workers: int):
-    """Process documents in parallel using multiprocessing Pool."""
-    workers = num_workers if num_workers > 0 else multiprocessing.cpu_count()
+def _process_documents_parallel(file_names: List[str], chunk_size: Optional[int], chunk_overlap: Optional[int], max_workers: int):
+    """Process documents in parallel using multiprocessing Pool.
+
+    Args:
+        file_names: A list of filenames to process.
+        chunk_size: The chunk size to use for processing.
+        chunk_overlap: The chunk overlap to use for processing.
+        max_workers: The maximum number of worker processes to use.
+    """
+    # Use max_workers if provided and positive, otherwise default to cpu_count
+    workers = max_workers if max_workers > 0 else multiprocessing.cpu_count()
     with multiprocessing.Pool(processes=workers) as pool:
         # Assuming process_documents or individual file processing can be mapped or called.
         # Here we distribute tasks across the pool.
@@ -85,9 +93,19 @@ async def ingest_documents(
     files: List[UploadFile] = File(...),
     chunk_size: Optional[int] = Form(None),
     chunk_overlap: Optional[int] = Form(None),
-    num_workers: Optional[int] = Form(None),
+    max_workers: Optional[int] = Form(None) # Add max_workers parameter
 ) -> IngestionResponse:
-    """Accept document file uploads for ingestion and asynchronous chunking with optional parallel processing."""
+    """Accept document file uploads for ingestion and asynchronous chunking with optional parallel processing.
+
+    Args:
+        background_tasks: BackgroundTasks object for scheduling asynchronous tasks.
+        metadata_store: Dependency injection for the metadata store.
+        files: List of UploadFile objects to be ingested.
+        chunk_size: Optional chunk size for document processing.
+        chunk_overlap: Optional chunk overlap for document processing.
+        max_workers: The maximum number of worker processes to use for parallel ingestion.
+                     Defaults to the number of CPU cores.
+    """
     try:
         file_names = []
         for file in files:
@@ -100,7 +118,8 @@ async def ingest_documents(
                     details="File received by API, queued for processing."
                 )
 
-        workers = num_workers if num_workers is not None else multiprocessing.cpu_count()
+        # Use max_workers if provided, otherwise default to cpu_count
+        workers = max_workers if max_workers is not None else multiprocessing.cpu_count()
         background_tasks.add_task(_process_documents_parallel, file_names, chunk_size, chunk_overlap, workers)
 
         return IngestionResponse(
