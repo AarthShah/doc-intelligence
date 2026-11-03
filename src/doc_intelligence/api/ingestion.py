@@ -46,7 +46,10 @@ async def ingest_documents(
     files: List[UploadFile] = File(...),
     chunk_size: Optional[int] = Form(None),
     chunk_overlap: Optional[int] = Form(None),
-    max_workers: Optional[int] = Form(None)
+    max_workers: Optional[int] = Form(None),
+    embedding_provider: Optional[str] = Form("fastembed"),
+    embedding_model: Optional[str] = Form(None),
+    embedding_api_key: Optional[str] = Form(None)
 ) -> IngestionResponse:
     """Accept document file uploads for ingestion and asynchronous chunking with optional parallel processing.
 
@@ -76,8 +79,8 @@ async def ingest_documents(
         
         logger.info(f"Starting parallel ingestion for {len(file_names)} files using {num_workers} workers.")
         
-        # Prepare arguments for the process_documents function
-        task_args = [( [fname], chunk_size, chunk_overlap ) for fname in file_names]
+        # Prepare arguments for the process_documents function including embedding provider config
+        task_args = [( [fname], chunk_size, chunk_overlap, embedding_provider, embedding_model, embedding_api_key ) for fname in file_names]
 
         # Use multiprocessing Pool to run process_documents in parallel
         try:
@@ -126,9 +129,17 @@ async def ingest_document(
     filename: str = Form(...),
     chunk_size: Optional[int] = Form(None),
     chunk_overlap: Optional[int] = Form(None),
+    embedding_provider: Optional[str] = Form("fastembed"),
+    embedding_model: Optional[str] = Form(None),
+    embedding_api_key: Optional[str] = Form(None),
 ) -> IngestionResponse:
     """Accept a single document's content for ingestion and asynchronous chunking."""
-    metadata = {"filename": filename}
+    metadata = {
+        "filename": filename,
+        "embedding_provider": embedding_provider,
+        "embedding_model": embedding_model,
+        "embedding_api_key": embedding_api_key,
+    }
     try:
         metadata_store.add_record(
             document_name=filename,
