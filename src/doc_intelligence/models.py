@@ -1,5 +1,6 @@
 """Core data models for doc-intelligence."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -67,3 +68,12 @@ class EvaluationReport:
     hallucination_score: float     # 0.0 to 1.0 (Lower = fewer unsupported statements)
     evaluated_at: str = field(default_factory=lambda: datetime.now().isoformat())
     details: Dict[str, Any] = field(default_factory=dict)
+
+
+class LLMProvider(ABC):
+    """Abstract base class for language model and embedding providers."""
+
+    @abstractmethod
+    def embed(self, texts: List[str], **kwargs: Any) -> List[List[float]]:
+        """Embed a list of text strings into vectors."""
+        pass
