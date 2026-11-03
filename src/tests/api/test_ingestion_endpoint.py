@@ -111,6 +111,43 @@ def test_parallel_ingestion_api(tmp_path, client: TestClient):
         os.remove(f_path)
 
 @pytest.mark.skipif(app is None, reason="FastAPI app or vector store not importable")
+def test_ingest_documents_endpoint_parallel(tmp_path, client: TestClient):
+    """
+    Test the /ingest-documents endpoint with a list of documents and a specified max_workers value.
+    """
+    num_documents = 5
+    files_to_ingest = []
+
+    for i in range(num_documents):
+        content = f"Parallel ingestion test content for document {i}."
+        filename = f"parallel_doc_{i}.txt"
+        filepath = tmp_path / filename
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(content)
+        files_to_ingest.append(filepath)
+
+    files_for_upload = [(os.path.basename(f), open(f, "rb")) for f in files_to_ingest]
+
+    response = client.post(
+        "/ingest-documents",
+        files=files_for_upload,
+        data={"max_workers": 2, "chunk_size": 300, "chunk_overlap": 30}
+    )
+
+    assert response.status_code == 202
+    response_data = response.json()
+    assert response_data["status"] == "processing"
+    assert len(response_data["received_files"]) == num_documents
+
+    for _, f_obj in files_for_upload:
+        f_obj.close()
+
+    for f_path in files_to_ingest:
+        if os.path.exists(f_path):
+            os.remove(f_path)
+
+
+@pytest.mark.skipif(app is None, reason="FastAPI app or vector store not importable")
 def test_single_document_ingestion_api(client: TestClient):
     """
     Test the /documents/document endpoint for single document ingestion.
