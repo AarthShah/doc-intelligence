@@ -1,89 +1,15 @@
-from typing import List, Optional
-from fastapi import APIRouter, File, Form, UploadFile, status, BackgroundTasks, HTTPException, Depends
-from pydantic import BaseModel, Field
-import asyncio
-import os
-import multiprocessing
-from datetime import datetime
+    # Determine the number of workers, defaulting to CPU count if not specified
+    num_workers = max_workers if max_workers is not None and max_workers > 0 else multiprocessing.cpu_count()
+    
+    # Prepare arguments for the process_documents function
+    task_args = [( [fname], chunk_size, chunk_overlap ) for fname in file_names]
 
-# Import the placeholder processing function
-from src.doc_intelligence.ingestion.processor import process_documents
-# Import the metadata store dependency
-from src.doc_intelligence.metadata_store.sqlite_store import get_metadata_store
-
-def process_document(*args, **kwargs):
-    """Placeholder for single document processing."""
-    pass
-
-import logging
-
-logger = logging.getLogger(__name__)
-
-# Configuration for vector store storage path
-VECTOR_STORE_PATH = os.getenv("VECTOR_STORE_PATH", "./vector_store_data")
-
-# Placeholder for background task
-async def _ingest_document_background(metadata_store: get_metadata_store, content: str, metadata: dict, chunk_size: Optional[int], chunk_overlap: Optional[int]):
-    """Placeholder for the actual document ingestion and chunking logic."""
-    filename = metadata.get("filename", "unknown")
-    storage_path = VECTOR_STORE_PATH
-    try:
-        print(f"Processing document: {filename}")
-        # Update metadata store with processing status
-        metadata_store.add_record(
-            document_name=filename,
-            ingestion_timestamp=datetime.now(),
-            status="processing",
-            details=f"Chunking and embedding initiated for {filename}."
-        )
-        # In a real implementation, this would call the chunking and embedding logic
-        await asyncio.sleep(1) # Simulate async work
-        print(f"Finished processing document: {filename}")
-        metadata_store.add_record(
-            document_name=filename,
-            ingestion_timestamp=datetime.now(), # This might need to be the original ingestion timestamp
-            status="completed",
-            details=f"Successfully processed {filename}."
-        )
-    except Exception as e:
-        logger.error(f"Error occurred during document processing for {filename}: {e}")
-        metadata_store.add_record(
-            document_name=filename,
-            ingestion_timestamp=datetime.now(), # This might need to be the original ingestion timestamp
-            status="failed",
-            details=f"Error processing {filename}: {e}"
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred during document processing: {e}",
-        )
-
-
-router = APIRouter(prefix="/documents", tags=["ingestion"])
-
-
-class IngestionResponse(BaseModel):
-    """Response model for document ingestion."""
-    message: str
-    received_files: List[str] = Field(default_factory=list)
-    status: str = "received"
-
-
-def _process_documents_parallel(file_names: List[str], chunk_size: Optional[int], chunk_overlap: Optional[int], max_workers: int):
-    """Process documents in parallel using multiprocessing Pool.
-
-    Args:
-        file_names: A list of filenames to process.
-        chunk_size: The chunk size to use for processing.
-        chunk_overlap: The chunk overlap to use for processing.
-        max_workers: The maximum number of worker processes to use.
-    """
-    # Use max_workers if provided and positive, otherwise default to cpu_count
-    workers = max_workers if max_workers > 0 else multiprocessing.cpu_count()
-    with multiprocessing.Pool(processes=workers) as pool:
-        # Assuming process_documents or individual file processing can be mapped or called.
-        # Here we distribute tasks across the pool.
-        pool.starmap(process_documents, [( [fname], chunk_size, chunk_overlap ) for fname in file_names])
+    # Use multiprocessing Pool to run process_documents in parallel
+    with multiprocessing.Pool(processes=num_workers) as pool:
+        # pool.starmap applies the function to each tuple of arguments in task_args
+        # This will block until all processes are done.
+        # In a real-world scenario, you might want to handle results or errors more granularly.
+        pool.starmap(process_documents, task_args)
 
 
 @router.post("", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
@@ -106,8 +32,8 @@ async def ingest_documents(
         max_workers: The maximum number of worker processes to use for parallel ingestion.
                      Defaults to the number of CPU cores.
     """
+    file_names = []
     try:
-        file_names = []
         for file in files:
             if file.filename:
                 file_names.append(file.filename)
@@ -118,18 +44,40 @@ async def ingest_documents(
                     details="File received by API, queued for processing."
                 )
 
-        # Use max_workers if provided, otherwise default to cpu_count
-        workers = max_workers if max_workers is not None else multiprocessing.cpu_count()
-        background_tasks.add_task(_process_documents_parallel, file_names, chunk_size, chunk_overlap, workers)
+        # Determine the number of workers, defaulting to CPU count if not specified
+        num_workers = max_workers if max_workers is not None and max_workers > 0 else multiprocessing.cpu_count()
+        
+        # Prepare arguments for the process_documents function
+        task_args = [( [fname], chunk_size, chunk_overlap ) for fname in file_names]
+
+        # Use multiprocessing Pool to run process_documents in parallel
+        with multiprocessing.Pool(processes=num_workers) as pool:
+            pool.starmap(process_documents, task_args)
+        
+        # Update metadata store for all processed files
+        for filename in file_names:
+            metadata_store.add_record(
+                document_name=filename,
+                ingestion_timestamp=datetime.now(), # Consider using original ingestion timestamp if available
+                status="completed",
+                details=f"Parallel processing initiated for {filename}."
+            )
 
         return IngestionResponse(
             message="Documents received successfully and queued for parallel processing.",
             received_files=file_names,
-            status="processing",
+            status="processing", # Status could be 'queued' or 'processing'
         )
     except Exception as e:
-        # Log the error and raise an HTTPException
         logger.error(f"An error occurred during document ingestion: {e}")
+        # Ensure that if an error occurs, the status reflects failure for any received files
+        for filename in file_names:
+            metadata_store.add_record(
+                document_name=filename,
+                ingestion_timestamp=datetime.now(), # Consider using original ingestion timestamp if available
+                status="failed",
+                details=f"Error during ingestion setup: {e}"
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred during document ingestion: {e}",
