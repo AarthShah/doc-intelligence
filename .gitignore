@@ -21,6 +21,7 @@ venv/
 # Environment and Secret variables
 .env*
 !.env.example
+requirements.txt
 *.pem
 *.key
 *.token
