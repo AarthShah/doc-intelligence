@@ -29,6 +29,7 @@ dependencies = [
 [project.scripts]
 ingest-docs = "doc_intelligence.cli.ingestion:main"
 evaluation-cli = "doc_intelligence.cli.evaluation:main"
+dashboard = "streamlit run src/doc_intelligence/dashboard/app.py"
 
 [project.optional-dependencies]
 api = [
