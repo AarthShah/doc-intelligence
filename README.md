@@ -315,3 +315,32 @@ Pull requests are welcome! Please ensure that all changes include comprehensive 
 ## 12. License
 
 Licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## 13. Streamlit Dashboard
+
+This section outlines how to set up and run the Streamlit dashboard for visualizing retrieval results and evaluation metrics.
+
+### 13.1. Installation
+
+First, ensure you have the necessary dependencies installed. Create a virtual environment and install the dashboard requirements:
+
+```bash
+# Create a virtual environment (if you don't have one already)
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+# Install project dependencies, including dashboard extras
+pip install -e ".[dashboard]"
+```
+
+### 13.2. Running the Dashboard
+
+Once the dependencies are installed, you can launch the Streamlit dashboard using the command defined in `pyproject.toml`:
+
+```bash
+dashboard
+```
+
+This command will start the Streamlit server, and you can access the dashboard in your web browser, typically at `http://localhost:8501`.
