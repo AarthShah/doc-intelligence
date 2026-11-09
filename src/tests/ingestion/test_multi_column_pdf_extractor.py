@@ -33,3 +33,14 @@ def test_multi_column_pdf_extraction(tmp_path):
     content = document.content
     assert "Left column text content" in content
     assert "Right column text content" in content
+
+
+@pytest.mark.skipif(not HAS_REPORTLAB, reason="reportlab is required to generate test PDFs")
+def test_multi_column_multi_page_pdf_extraction(sample_multi_page_pdf):
+    extractor = MultiColumnPDFExtractor()
+    document = extractor.extract(sample_multi_page_pdf)
+
+    assert document is not None
+    content = document.content
+    assert "Page 1 left content" in content
+    assert "Page 2 right content continuation" in content

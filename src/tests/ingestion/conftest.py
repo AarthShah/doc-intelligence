@@ -30,3 +30,29 @@ def sample_two_column_pdf():
     finally:
         if os.path.exists(path):
             os.remove(path)
+
+
+@pytest.fixture
+def sample_multi_page_pdf():
+    """Create a temporary multi-page PDF with empty columns and spanning text for testing."""
+    fd, path = tempfile.mkstemp(suffix=".pdf")
+    os.close(fd)
+
+    try:
+        c = canvas.Canvas(path, pagesize=letter)
+        width, height = letter
+
+        # Page 1: Left column has content, right column is empty
+        c.drawString(54, height - 100, "Page 1 left content")
+        c.showPage()
+
+        # Page 2: Left column is empty, right column has content continuing across pages
+        c.drawString(width / 2 + 20, height - 100, "Page 2 right content continuation")
+        c.showPage()
+
+        c.save()
+
+        yield path
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
