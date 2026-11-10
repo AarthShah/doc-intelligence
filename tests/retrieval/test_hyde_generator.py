@@ -38,5 +38,18 @@ class TestHyDEGenerator(unittest.TestCase):
         # If prompt_template is provided, it will use that.
         # For this test, we are not providing a prompt_template, so we expect the default.
         expected_prompt = f"Generate a hypothetical document for the query: {query}"
+
+    def test_generate_hypothetical_document_handles_empty_query(self):
+        ideal_doc = ""  # For an empty query, the LLM might return an empty string.
+        mock_llm_client = MockLLMProvider(ideal_document=ideal_doc)
+        generator = HyDEGenerator(llm_client=mock_llm_client)
+
+        query = ""
+        hypothetical_document = generator.generate_hypothetical_document(query)
+
+        self.assertIsInstance(hypothetical_document, str)
+        self.assertEqual(hypothetical_document, ideal_doc)
+        # The prompt will still be generated, but the LLM is expected to return an empty string.
+
         # We can't directly assert on the generate method of MockLLMProvider as it doesn't store calls.
         # Instead, we assert the output, which is directly controlled by MockLLMProvider.
