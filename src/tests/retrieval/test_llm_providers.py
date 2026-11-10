@@ -1,6 +1,19 @@
 import pytest
 from unittest.mock import patch, MagicMock
+from doc_intelligence.models import LLMProvider
 from doc_intelligence.retrieval.llm_providers import HuggingFaceInferenceAPIProvider
+
+
+class MockLLMProvider(LLMProvider):
+    """A shared mock LLM provider for testing retrieval components."""
+
+    def __init__(self, response: str = "Mocked response text"):
+        self.response = response
+        self.last_prompt = None
+
+    def generate(self, prompt: str) -> str:
+        self.last_prompt = prompt
+        return self.response
 
 
 def test_huggingface_inference_api_provider_success():
