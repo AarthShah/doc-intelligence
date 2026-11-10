@@ -48,8 +48,15 @@ class TestHyDEGenerator(unittest.TestCase):
         hypothetical_document = generator.generate_hypothetical_document(query)
 
         self.assertIsInstance(hypothetical_document, str)
-        self.assertEqual(hypothetical_document, ideal_doc)
-        # The prompt will still be generated, but the LLM is expected to return an empty string.
+        self.assertEqual(hypothetical_document, "")
 
-        # We can't directly assert on the generate method of MockLLMProvider as it doesn't store calls.
-        # Instead, we assert the output, which is directly controlled by MockLLMProvider.
+    def test_generate_hypothetical_document_empty_llm_response(self):
+        ideal_doc = ""
+        mock_llm_client = MockLLMProvider(ideal_document=ideal_doc)
+        generator = HyDEGenerator(llm_client=mock_llm_client)
+
+        query = "What is quantum computing?"
+        hypothetical_document = generator.generate_hypothetical_document(query)
+
+        self.assertIsInstance(hypothetical_document, str)
+        self.assertEqual(hypothetical_document, "")
