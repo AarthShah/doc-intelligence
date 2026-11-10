@@ -46,6 +46,21 @@ def test_query_expander_expand_query(query_expander):
     assert "Tell me about Paris." in expanded_queries
 
 
+def test_query_expander_expand_query_no_expansion_needed(query_expander):
+    """Tests that QueryExpander handles cases where no expansion is needed."""
+    original_query = "What is the capital of France?"
+    # Mock the LLM to return the original query if no expansion is necessary
+    no_expansion_mock = MockLLMProvider(prompt_response_map={original_query: original_query})
+    no_expansion_hyde_generator = HYDEQueryGenerator(llm_provider=no_expansion_mock)
+    no_expansion_query_expander = QueryExpander(hyde_generator=no_expansion_hyde_generator)
+
+    expanded_queries = no_expansion_query_expander.expand_query(original_query)
+
+    assert isinstance(expanded_queries, list)
+    assert all(isinstance(q, str) for q in expanded_queries)
+    assert expanded_queries == [original_query]
+
+
 def test_query_expander_expand_query_empty_input(query_expander):
     """Tests that QueryExpander.expand_query returns an empty list for an empty query."""
     query = ""
