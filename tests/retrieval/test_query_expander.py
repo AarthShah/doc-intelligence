@@ -4,12 +4,25 @@ from unittest.mock import MagicMock
 from src.doc_intelligence.retrieval.query_expander import QueryExpander, HYDEQueryGenerator
 
 
+class MockLLMProvider:
+    """
+    A mock LLM provider that returns predefined expanded queries.
+    """
+    def __init__(self, prompt_response_map: dict):
+        self.prompt_response_map = prompt_response_map
+
+    def generate_response(self, prompt: str, **kwargs) -> str:
+        return self.prompt_response_map.get(prompt, "default expanded query")
+
+
 @pytest.fixture
 def mock_llm_provider():
-    """Mocks the LLM provider."""
-    mock_provider = MagicMock()
-    mock_provider.generate_response.return_value = "This is a generated response."
-    return mock_provider
+    """Mocks the LLM provider with predefined responses."""
+    mock_responses = {
+        "What is the capital of France?": "What is the major city of France? Tell me about Paris.",
+        "Who was the first president of the United States?": "Who was the initial leader of America? Information on George Washington.",
+    }
+    return MockLLMProvider(prompt_response_map=mock_responses)
 
 
 @pytest.fixture
@@ -28,5 +41,6 @@ def test_query_expander_expand_query(query_expander):
     assert all(isinstance(q, str) for q in expanded_queries)
     # Add more specific assertions based on expected output if needed
     # For now, we just check the type and that it's not empty if the mock provides a response.
-    if mock_llm_provider().generate_response.return_value:
-        assert len(expanded_queries) > 0
+    assert len(expanded_queries) > 0
+    assert "What is the major city of France?" in expanded_queries
+    assert "Tell me about Paris." in expanded_queries
