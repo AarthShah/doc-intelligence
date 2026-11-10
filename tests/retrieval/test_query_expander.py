@@ -44,3 +44,11 @@ def test_query_expander_expand_query(query_expander):
     assert len(expanded_queries) > 0
     assert "What is the major city of France?" in expanded_queries
     assert "Tell me about Paris." in expanded_queries
+
+
+def test_query_expander_expand_query_empty_input(query_expander):
+    """Tests that QueryExpander.expand_query returns an empty list for an empty query."""
+    query = ""
+    expanded_queries = query_expander.expand_query(query)
+
+    assert expanded_queries == []
