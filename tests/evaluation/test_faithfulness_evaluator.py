@@ -97,8 +97,26 @@ def test_faithfulness_evaluator_edge_cases():
     assert score3 is not None
     assert isinstance(score3, float)
 
+    # Case 4: Empty context
+    question4 = "Test question"
+    answer4 = "Test answer"
+    context4 = ""
+    score4 = evaluator.evaluate(question=question4, answer=answer4, context=context4)
+    assert score4 is not None
+    assert isinstance(score4, float)
+
+    # Case 5: Whitespace strings
+    question5 = "   "
+    answer5 = "   "
+    context5 = "   "
+    score5 = evaluator.evaluate(question=question5, answer=answer5, context=context5)
+    assert score5 is not None
+    assert isinstance(score5, float)
+
     # The exact scores for these edge cases will depend on the LLM's behavior.
     # We assert that a float is returned and the score is not trivially perfect.
     assert score1 < 1.0
     assert score2 < 1.0
     assert score3 < 1.0
+    assert score4 < 1.0
+    assert score5 < 1.0
