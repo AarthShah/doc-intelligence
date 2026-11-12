@@ -35,6 +35,21 @@ def test_faithfulness_evaluator_unfaithful_answer():
     assert isinstance(score, float)
     assert score < 0.5  # Expect a low score for an unfaithful answer
 
+def test_faithfulness_evaluator_another_unfaithful_answer():
+    """
+    Test FaithfulnessEvaluator with another completely hallucinated answer.
+    """
+    evaluator = FaithfulnessEvaluator()
+    question = "Who won the 2022 FIFA World Cup?"
+    answer = "Mars won the 2022 FIFA World Cup by defeating Jupiter."
+    context = "The 2022 FIFA World Cup was held in Qatar and won by Argentina."
+
+    score = evaluator.evaluate(question=question, answer=answer, context=context)
+
+    assert score is not None
+    assert isinstance(score, float)
+    assert score < 0.5
+
 def test_faithfulness_evaluator_missing_context():
     """
     Test FaithfulnessEvaluator when context is missing.
