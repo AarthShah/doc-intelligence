@@ -112,3 +112,24 @@ def test_hallucination_detector_detect_unsupported_information():
     is_hallucination = detector.detect(reference_document, generated_answer, context)
     
     assert is_hallucination, "Detector should identify unsupported information in the generated answer as a hallucination."
+
+def test_hallucination_detector_detect_empty_inputs():
+    """
+    Test that HallucinationDetector handles empty strings for question, context, and answer gracefully.
+    """
+    detector = HallucinationDetector()
+    
+    # Test with empty strings
+    reference_document = ""
+    generated_answer = ""
+    context = []
+    question = ""
+    
+    # Expecting no exception and a predictable outcome (e.g., False, assuming no hallucination can be detected with no data)
+    try:
+        is_hallucination = detector.detect(reference_document, generated_answer, context, question)
+        assert isinstance(is_hallucination, bool)
+        # For empty inputs, it's reasonable to assume no hallucination is detected.
+        assert not is_hallucination, "Detector should return False for empty inputs."
+    except Exception as e:
+        pytest.fail(f"HallucinationDetector.detect raised an exception with empty inputs: {e}")
