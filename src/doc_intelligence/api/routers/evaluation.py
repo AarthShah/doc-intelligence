@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 
-from src.doc_intelligence.api.models import EvaluationRequest, EvaluationResponse, MetricScore
+from doc_intelligence.api.models import EvaluationRequest, EvaluationResponse, MetricScore
 
 
 @router.post("", response_model=EvaluationResponse, status_code=status.HTTP_200_OK)

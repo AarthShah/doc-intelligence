@@ -3,12 +3,12 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, Field
 
-from src.doc_intelligence.api.rate_limiter import RateLimiter
-from src.doc_intelligence.chunking.recursive_character_text_splitter import RecursiveCharacterTextSplitter
-from src.doc_intelligence.models import Document
-from src.doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
-from src.doc_intelligence.retrieval.reranker import Reranker
-from src.doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
+from doc_intelligence.api.rate_limiter import RateLimiter
+from doc_intelligence.chunking.recursive_character_text_splitter import RecursiveCharacterTextSplitter
+from doc_intelligence.models import Document
+from doc_intelligence.retrieval.hybrid_retriever import HybridRetriever
+from doc_intelligence.retrieval.reranker import Reranker
+from doc_intelligence.retrieval.token_budget_manager import TokenBudgetManager
 
 # router will be defined after get_rate_limiter
 
@@ -75,7 +75,7 @@ def get_rate_limiter() -> RateLimiter:
 router = APIRouter(prefix="/api/v1/search", tags=["Search"], dependencies=[Depends(get_rate_limiter)])
 
 
-from src.doc_intelligence.api.models import SearchRequest, SearchResponse, SearchResult
+from doc_intelligence.api.models import SearchRequest, SearchResponse, SearchResult
 
 
 # API Endpoint

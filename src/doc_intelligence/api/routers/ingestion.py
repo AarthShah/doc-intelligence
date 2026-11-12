@@ -6,7 +6,7 @@ from doc_intelligence.api.dependencies.rate_limiter import RateLimiter
 
 router = APIRouter(prefix="/ingestion", tags=["ingestion"])
 
-from src.doc_intelligence.api.models import DocumentIngestRequest
+from doc_intelligence.api.models import DocumentIngestRequest
 
 @router.post("/documents", dependencies=[Depends(RateLimiter(requests_per_unit=2, unit_seconds=10))])
 async def ingest_documents(files: List[UploadFile] = File(...), max_workers: int = 1):

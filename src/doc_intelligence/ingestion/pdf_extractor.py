@@ -10,7 +10,7 @@ from pdfminer.layout import LAParams, LTChar, LTTextLineHorizontal, LTTextBoxHor
 from pdfminer.pdfinterp import PDFPageInterpreter, PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 
-from src.doc_intelligence.models import Document, DocumentMetadata
+from doc_intelligence.models import Document, DocumentMetadata
 
 
 @dataclass

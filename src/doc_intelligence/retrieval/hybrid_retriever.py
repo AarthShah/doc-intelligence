@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 from doc_intelligence.exceptions import RetrievalError, VectorStoreError
 from doc_intelligence.models import Chunk, QueryResult
 from doc_intelligence.retrieval.bm25_search import BM25Retriever
@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 class HybridRetriever:
     """Combines semantic dense search and lexical BM25 using Reciprocal Rank Fusion."""
 
-    def __init__(self, rrf_k: int = 60):
+    def __init__(self, rrf_k: int = 60, persist_path: Optional[str] = None, *args, **kwargs):
         self.rrf_k = rrf_k
+        self.persist_path = persist_path
         self.vector_store = VectorStore()
         self.bm25 = BM25Retriever()
 

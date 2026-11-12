@@ -1,6 +1,6 @@
 from typing import List, Optional, Pattern
 
-from src.doc_intelligence.models import Chunk, Document
+from doc_intelligence.models import Chunk, Document
 
 
 class RecursiveCharacterTextSplitter:

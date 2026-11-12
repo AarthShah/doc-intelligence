@@ -46,6 +46,15 @@ class SQLiteMetadataStore(MetadataStore):
         self.db_path = db_path
         self._initialize_db()
 
+_metadata_store_instance = None
+
+def get_metadata_store(db_path: str = "metadata.db") -> SQLiteMetadataStore:
+    """FastAPI/singleton dependency provider for SQLiteMetadataStore."""
+    global _metadata_store_instance
+    if _metadata_store_instance is None:
+        _metadata_store_instance = SQLiteMetadataStore(db_path=db_path)
+    return _metadata_store_instance
+
     def _initialize_db(self):
         """Creates the metadata table if it does not exist."""
         try:

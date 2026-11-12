@@ -23,3 +23,78 @@ def test_hallucination_detector_detect_runs():
         assert isinstance(is_hallucination, bool)
     except Exception as e:
         pytest.fail(f"HallucinationDetector.detect raised an exception: {e}")
+
+def test_hallucination_detector_detect_consistent():
+    """
+    Test that HallucinationDetector returns False for factually consistent data.
+    """
+    detector = HallucinationDetector()
+    
+    # Factually consistent data
+    reference_document = "The capital of France is Paris."
+    generated_answer = "Paris is the capital of France."
+    context = ["The capital of France is Paris."]
+    
+    is_hallucination = detector.detect(reference_document, generated_answer, context)
+    
+    assert not is_hallucination, "Detector should not identify factually consistent data as hallucination."
+
+def test_hallucination_detector_detect_consistent_with_question_and_context():
+    """
+    Test that HallucinationDetector returns False for factually consistent data with specific question and context.
+    """
+    detector = HallucinationDetector()
+    
+    question = "What is the capital of France?"
+    context = ["The capital of France is Paris, known for its art and culture."]
+    generated_answer = "The capital of France is Paris."
+    reference_document = "The capital of France is Paris, known for its art and culture."
+    
+    # Depending on signature support or kwargs in detectors, test standard detect call
+    is_hallucination = detector.detect(reference_document, generated_answer, context)
+    assert not is_hallucination, "Detector should return no hallucination for consistent question, context, and answer."
+
+def test_hallucination_detector_detect_consistent_with_question():
+    """
+    Test that HallucinationDetector handles question, context, and a consistent answer correctly.
+    """
+    detector = HallucinationDetector()
+    
+    question = "What is the capital of France?"
+    context = ["The capital of France is Paris, known for its art and culture."]
+    generated_answer = "The capital of France is Paris."
+    reference_document = "The capital of France is Paris, known for its art and culture."
+    
+    # Depending on signature support or kwargs in detectors, test standard detect call
+    is_hallucination = detector.detect(reference_document, generated_answer, context)
+    assert not is_hallucination, "Detector should return no hallucination for consistent question, context, and answer."
+
+def test_hallucination_detector_detect_consistent_with_question_and_answer():
+    """
+    Test that HallucinationDetector returns False for factually consistent data with a question, context, and answer.
+    """
+    detector = HallucinationDetector()
+    
+    question = "What is the capital of France?"
+    context = ["The capital of France is Paris."]
+    generated_answer = "Paris is the capital of France."
+    reference_document = "The capital of France is Paris."
+
+    is_hallucination = detector.detect(reference_document, generated_answer, context)
+    
+    assert not is_hallucination, "Detector should return no hallucination for consistent question, context, and answer."
+
+def test_hallucination_detector_detect_hallucinates():
+    """
+    Test that HallucinationDetector returns True for factually inconsistent data.
+    """
+    detector = HallucinationDetector()
+    
+    # Factually inconsistent data
+    reference_document = "The sun rises in the east."
+    generated_answer = "The sun rises in the west."
+    context = ["The sun rises in the east."]
+    
+    is_hallucination = detector.detect(reference_document, generated_answer, context)
+    
+    assert is_hallucination, "Detector should identify factually inconsistent data as hallucination."

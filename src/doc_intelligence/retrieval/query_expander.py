@@ -2,7 +2,8 @@ from collections import Counter
 from typing import Any, List, Optional
 import re
 
-from src.doc_intelligence.models import Chunk
+from doc_intelligence.models import Chunk
+from doc_intelligence.retrieval.hyde_generator import HyDEGenerator as HYDEQueryGenerator
 
 
 class QueryExpander:

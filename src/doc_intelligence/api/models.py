@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from src.doc_intelligence.models import Document
+from doc_intelligence.models import Document
 
 class SearchRequest(BaseModel):
     """Request model for the search endpoint."""

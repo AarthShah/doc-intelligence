@@ -1,4 +1,5 @@
 from typing import List, Any, Callable
+from doc_intelligence.evaluation.hallucination_detector import HallucinationDetector
 
 # Assume a base Evaluator class exists with an 'evaluate' method.
 # For this implementation, we'll define it implicitly.

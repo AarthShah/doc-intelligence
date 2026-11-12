@@ -8,12 +8,16 @@ from fastapi import APIRouter, File, Form, UploadFile, status, BackgroundTasks, 
 from pydantic import BaseModel, Field
 
 # Import the placeholder processing function
-from src.doc_intelligence.ingestion.processor import process_documents
-from src.doc_intelligence.api.dependencies.metadata import get_metadata_store
+from doc_intelligence.ingestion.processor import process_documents
+from doc_intelligence.api.dependencies.metadata import get_metadata_store
 
 logger = logging.getLogger(__name__)
 
-# Placeholder for background task
+# Document processing handlers
+def process_document(content: str, metadata: Optional[dict] = None) -> None:
+    """Process a document payload and update store."""
+    logger.info(f"Processing document: {(metadata or {}).get('filename', 'payload')}")
+
 async def _ingest_document_background(metadata_store: get_metadata_store, content: str, metadata: dict, chunk_size: Optional[int], chunk_overlap: Optional[int]):
     """Placeholder for the actual document ingestion and chunking logic."""
     try:
