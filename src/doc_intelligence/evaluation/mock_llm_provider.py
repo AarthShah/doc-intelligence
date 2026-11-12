@@ -28,6 +28,10 @@ class MockLLMProvider:
         """Clears all predefined prompt-response mappings."""
         self._responses = self._initial_responses.copy()
 
+    def set_response(self, prompt: str, response: str) -> None:
+        """Sets a response for a specific prompt dynamically."""
+        self._responses[prompt] = response
+
     def __call__(self, prompt: str, **kwargs) -> str:
         """
         Allows the provider instance to be called directly as a function.
