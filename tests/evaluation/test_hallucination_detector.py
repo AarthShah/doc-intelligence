@@ -98,3 +98,17 @@ def test_hallucination_detector_detect_hallucinates():
     is_hallucination = detector.detect(reference_document, generated_answer, context)
     
     assert is_hallucination, "Detector should identify factually inconsistent data as hallucination."
+
+def test_hallucination_detector_detect_unsupported_information():
+    """
+    Test that HallucinationDetector returns True when the answer contains information not present in the context.
+    """
+    detector = HallucinationDetector()
+    
+    reference_document = "Photosynthesis is the process used by plants to convert light into energy."
+    generated_answer = "Photosynthesis converts light into energy, and plants also use it to produce chocolate."
+    context = ["Photosynthesis is the process used by plants to convert light into energy."]
+    
+    is_hallucination = detector.detect(reference_document, generated_answer, context)
+    
+    assert is_hallucination, "Detector should identify unsupported information in the generated answer as a hallucination."
