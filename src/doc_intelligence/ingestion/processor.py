@@ -96,15 +96,15 @@ class Processor:
                 },
             )
 
-            # Generate embeddings and add to vector store
+            # Generate embeddings and add to vector store in batch
             embed_start = time.time()
-            for chunk in chunks:
-                if not chunk.embedding:
-                    embeddings = self.embedding_provider.embed_documents(
-                        [chunk.text]
-                    )
-                    chunk.embedding = embeddings[0]
-                self.vector_store.add_chunks([chunk])
+            chunks_without_embeddings = [c for c in chunks if not c.embedding]
+            if chunks_without_embeddings:
+                texts = [c.text for c in chunks_without_embeddings]
+                embeddings = self.embedding_provider.embed_documents(texts)
+                for chunk, embedding in zip(chunks_without_embeddings, embeddings):
+                    chunk.embedding = embedding
+            self.vector_store.add_chunks(chunks)
             embed_duration = time.time() - embed_start
             logging.info(
                 "Embeddings generated and chunks stored successfully",
