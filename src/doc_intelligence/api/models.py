@@ -38,5 +38,4 @@ class EvaluationResponse(BaseModel):
     summary: Optional[str] = None
 
 class DocumentIngestRequest(BaseModel):
-    content: str = Field(..., min_length=1)
     metadata: dict = Field(default_factory=dict)

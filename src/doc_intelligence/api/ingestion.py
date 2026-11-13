@@ -43,6 +43,57 @@ class IngestionResponse(BaseModel):
     status: str = "received"
 
 
+@router.post("/ingest", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post("/ingest", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
+async def ingest_file(
+    background_tasks: BackgroundTasks,
+    metadata_store: get_metadata_store,
+    file: UploadFile = File(...),
+    chunk_size: Optional[int] = Form(None),
+    chunk_overlap: Optional[int] = Form(None),
+    embedding_provider: Optional[str] = Form("fastembed"),
+    embedding_model: Optional[str] = Form(None),
+    embedding_api_key: Optional[str] = Form(None)
+) -> IngestionResponse:
+    """Accept a single document file upload for ingestion."""
+    return await ingest_documents(
+        background_tasks=background_tasks,
+        metadata_store=metadata_store,
+        files=[file],
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        max_workers=1,
+        embedding_provider=embedding_provider,
+        embedding_model=embedding_model,
+        embedding_api_key=embedding_api_key,
+    )
+
+
+@router.post("/ingest", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
+async def ingest_file(
+    background_tasks: BackgroundTasks,
+    metadata_store: get_metadata_store,
+    file: UploadFile = File(...),
+    chunk_size: Optional[int] = Form(None),
+    chunk_overlap: Optional[int] = Form(None),
+    embedding_provider: Optional[str] = Form("fastembed"),
+    embedding_model: Optional[str] = Form(None),
+    embedding_api_key: Optional[str] = Form(None)
+) -> IngestionResponse:
+    """Accept a single document file upload for ingestion."""
+    return await ingest_documents(
+        background_tasks=background_tasks,
+        metadata_store=metadata_store,
+        files=[file],
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        max_workers=1,
+        embedding_provider=embedding_provider,
+        embedding_model=embedding_model,
+        embedding_api_key=embedding_api_key,
+    )
+
+
 @router.post("", response_model=IngestionResponse, status_code=status.HTTP_202_ACCEPTED)
 async def ingest_documents(
     background_tasks: BackgroundTasks,
