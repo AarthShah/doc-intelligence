@@ -21,3 +21,13 @@ class DocumentIntelligenceUser(HttpUser):
                 response.success()
             else:
                 response.failure(f"Failed with status code: {response.status_code}")
+
+    @task
+    def search_documents(self):
+        """Send a GET request to the /search endpoint with a sample query."""
+        params = {"q": "sample document content"}
+        with self.client.get("/search", params=params, catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+            else:
+                response.failure(f"Failed with status code: {response.status_code}")
