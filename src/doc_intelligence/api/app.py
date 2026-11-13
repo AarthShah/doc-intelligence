@@ -15,7 +15,10 @@ except ImportError:
 
 from doc_intelligence import __version__
 from doc_intelligence.logging_config import setup_logging
-from doc_intelligence.api.dependencies.rate_limiter import RateLimiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.errors import RateLimitExceeded
+from doc_intelligence.api.rate_limiter import limiter
 from doc_intelligence.chunking.semantic_chunker import SemanticChunker
 from doc_intelligence.evaluation.rag_evaluator import RAGEvaluator
 from doc_intelligence.ingestion.text_parser import TextParser
@@ -78,29 +81,15 @@ else:
 
 context_compressor = ContextCompressor(embedding_model=embedding_model)
 
-# Instantiate rate limiter for API request throttling
-rate_limiter = RateLimiter(requests_per_unit=100, unit_seconds=60)
-
-
-def enforce_rate_limit(request: Request, limiter: RateLimiter = Depends(lambda: rate_limiter)) -> RateLimiter:
-    """
-    FastAPI dependency that checks the request against the global RateLimiter.
-    Raises HTTP 429 if the client has exceeded the allowed request quota.
-    """
-    client_ip = request.client.host if request.client else "unknown"
-    check_fn = getattr(limiter, "is_allowed", getattr(limiter, "allow", None))
-    if check_fn and not check_fn(client_ip):
-        raise HTTPException(status_code=429, detail="Too Many Requests")
-    return limiter
-
-
 if FASTAPI_AVAILABLE:
     app = FastAPI(
         title="doc-intelligence API",
         description="Autonomous AI Document Intelligence & RAG Evaluation Platform",
         version=__version__,
-        dependencies=[Depends(enforce_rate_limit)],
     )
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    app.add_middleware(SlowAPIMiddleware, limiter=limiter)
 
     app.include_router(ingestion_router, prefix="/api/v1/ingestion")
     app.include_router(evaluation_router, prefix="/api/v1/evaluation")
@@ -130,6 +119,7 @@ if FASTAPI_AVAILABLE:
         }
 
     @app.post("/ingest/text")
+    @limiter.limit("100/minute")
     def ingest_document(
         request: Request,
         req: IngestRequest,
@@ -157,6 +147,7 @@ if FASTAPI_AVAILABLE:
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.post("/query")
+    @limiter.limit("100/minute")
     def search_documents(
         request: Request,
         req: QueryRequest,
@@ -209,6 +200,7 @@ if FASTAPI_AVAILABLE:
         }
 
     @app.post("/ingest/epub")
+    @limiter.limit("100/minute")
     async def ingest_epub(
         request: Request,
         file: UploadFile = File(...),
