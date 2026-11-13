@@ -1,5 +1,6 @@
 """In-memory dense vector store with cosine similarity."""
 
+import heapq
 import logging
 import math
 import re
@@ -200,11 +201,11 @@ class VectorStore:
                 sim = cosine_similarity(query_vec, chunk.embedding)
                 scored.append((sim, chunk))
 
-            scored.sort(key=lambda x: x[0], reverse=True)
+            top_scored = heapq.nlargest(top_k, scored, key=lambda x: x[0])
 
             results = [
                 QueryResult(chunk=chunk, score=score, retrieval_method="dense")
-                for score, chunk in scored[:top_k]
+                for score, chunk in top_scored
             ]
             self._cache[cache_key] = results
             logger.debug("Completed search for query: %r, returned %d results", query, len(results))
