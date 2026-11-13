@@ -8,15 +8,11 @@ class DocumentIntelligenceUser(HttpUser):
 
     @task
     def ingest_document(self):
-        """Send a POST request to the /ingest endpoint with a sample document payload."""
-        payload = {
-            "content": "This is a sample document content used for load testing the ingestion endpoint.",
-            "metadata": {
-                "source": "locust-load-test",
-                "author": "perf-tester"
-            }
+        """Send a POST request to the /ingest endpoint with a multipart/form-data file payload."""
+        files = {
+            "file": ("sample.txt", b"This is a sample document content used for load testing the ingestion endpoint.", "text/plain")
         }
-        with self.client.post("/ingest", json=payload, catch_response=True) as response:
+        with self.client.post("/ingest", files=files, catch_response=True) as response:
             if response.status_code == 200:
                 response.success()
             else:
