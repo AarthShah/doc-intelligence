@@ -14,13 +14,15 @@ class JSONFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
         }
+        if hasattr(record, "duration_ms"):
+            log_record["duration_ms"] = record.duration_ms
         if record.exc_info:
             log_record["exception"] = self.formatException(record.exc_info)
         return json.dumps(log_record)
 
 
-def setup_logging(level: int = logging.INFO) -> None:
-    """Configure root logger to use JSON formatting."""
+def setup_logging(level: int = logging.INFO) -> logging.Logger:
+    """Configure root logger to use JSON formatting and return logger instance."""
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(JSONFormatter())
 
@@ -32,3 +34,4 @@ def setup_logging(level: int = logging.INFO) -> None:
         root_logger.handlers.clear()
 
     root_logger.addHandler(handler)
+    return logging.getLogger("doc_intelligence")

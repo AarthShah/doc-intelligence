@@ -54,7 +54,7 @@ def initialize_database():
     conn.close()
 
 # Initialize logging and database when the module is loaded
-setup_logging()
+logger = setup_logging()
 initialize_database()
 # --- End Database Setup ---
 
@@ -125,11 +125,17 @@ if FASTAPI_AVAILABLE:
         req: IngestRequest,
         redact_pii: bool = False,
     ) -> Dict[str, Any]:
+        import time
+        start_time = time.time()
+        logger.info("Ingesting document from source: %s", req.source_name)
         try:
             sanitizer = DocumentSanitizer() if redact_pii else None
             doc = parser.parse(req.text, source_name=req.source_name, sanitizer=sanitizer)
             chunks = chunker.chunk(doc)
             retriever.index(chunks)
+            duration_ms = (time.time() - start_time) * 1000
+            extra_log = {"duration_ms": duration_ms}
+            logger.info("Successfully ingested document %s with %d chunks in %.2f ms", doc.id, len(chunks), duration_ms, extra=extra_log)
             return {
                 "message": "Document ingested and indexed successfully",
                 "doc_id": doc.id,
@@ -137,6 +143,7 @@ if FASTAPI_AVAILABLE:
                 "total_index_count": retriever.vector_store.count,
             }
         except Exception as e:
+            logger.error("Failed to ingest document: %s", str(e), exc_info=True)
             from doc_intelligence.exceptions import ParsingError, VectorStoreError, DocumentIntelligenceError
             if isinstance(e, ParsingError):
                 raise HTTPException(status_code=400, detail=str(e))
@@ -152,6 +159,9 @@ if FASTAPI_AVAILABLE:
         request: Request,
         req: QueryRequest,
     ) -> Dict[str, Any]:
+        import time
+        start_time = time.time()
+        logger.info("Executing search query: %s (top_k=%d)", req.query, req.top_k)
         try:
             results = retriever.search(req.query, top_k=req.top_k)
             formatted_results = []
@@ -165,12 +175,16 @@ if FASTAPI_AVAILABLE:
                     "chunk_id": r.chunk.id,
                     "method": r.retrieval_method,
                 })
+            duration_ms = (time.time() - start_time) * 1000
+            extra_log = {"duration_ms": duration_ms}
+            logger.info("Search query completed successfully with %d results in %.2f ms", len(results), duration_ms, extra=extra_log)
             return {
                 "query": req.query,
                 "results_count": len(results),
                 "results": formatted_results,
             }
         except Exception as e:
+            logger.error("Failed to execute search query: %s", str(e), exc_info=True)
             from doc_intelligence.exceptions import RetrievalError, VectorStoreError, DocumentIntelligenceError
             if isinstance(e, RetrievalError):
                 raise HTTPException(status_code=400, detail=str(e))
