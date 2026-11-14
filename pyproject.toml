@@ -34,7 +34,7 @@ dashboard = "streamlit run src/doc_intelligence/dashboard/app.py"
 [project.optional-dependencies]
 api = [
     "fastapi>=0.100.0",
-    "uvicorn>=0.22.0",
+    "uvicorn[standard]>=0.22.0", # Added [standard] for production use
 ]
 dev = [
     "pytest>=7.0",

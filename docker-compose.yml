@@ -12,3 +12,8 @@ services:
     volumes:
     - ./src:/app/src
     - ./data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
