@@ -8,6 +8,9 @@ Welcome to doc-intelligence's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   api/index
+   api/routers
+
 
 Indices and tables
 ==================
