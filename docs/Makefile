@@ -7,7 +7,9 @@ SOURCEDIR      = .
 BUILDDIR       = _build
 
 # Put your Sphinx build commands here
-all:
+all: html
+
+html:
 	$(SPHINXBUILD) -b html $(SOURCEDIR) $(BUILDDIR)
 
 clean:
