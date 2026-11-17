@@ -83,3 +83,5 @@ test = [
 
 [tool.pytest.ini_options]
 pythonpath = ["src", "."]
+testpaths = ["tests"]
+norecursedirs = [".git", ".tox", ".env", "venv", "dist", "build", "migrations"]
