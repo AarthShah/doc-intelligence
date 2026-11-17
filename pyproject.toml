@@ -22,6 +22,21 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP"] # Error, Warning, Pyflakes, Isort, Remove unused imports
+ignore = [] # Specific rules to ignore
+
+[tool.ruff.format]
+quote-style = "double" # Use double quotes for strings
+skip-magic-trailing-comma = true # Allow magic trailing commas
+
+[tool.ruff.lint.isort]
+known-third-party = ["fastapi", "uvicorn", "pytest", "sentence_transformers"] # Mark these as third-party for sorting
+
 [project.urls]
 Homepage = "https://github.com/aarthishah/doc-intelligence"
 Repository = "https://github.com/aarthishah/doc-intelligence"
