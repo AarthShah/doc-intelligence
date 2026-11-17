@@ -30,6 +30,9 @@ Documentation = "https://aarthishah.github.io/doc-intelligence/"
 dependencies = [
     "pyyaml>=6.0",
     "ebooklib>=0.18",
+    "fastembed>=0.2.0",  # Core dependency for embedding
+    "sentence-transformers>=3.0.0", # Core dependency for semantic search and evaluation
+    "python-dotenv>=1.0.0", # For environment variable management
 ]
 
 [project.scripts]

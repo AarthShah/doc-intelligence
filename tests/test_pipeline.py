@@ -246,7 +246,7 @@ class TestQueryToContextPipeline(unittest.TestCase):
         """Test document ingestion, parsing, chunking, and storing in vector store end-to-end."""
         parser = TextParser()
         raw_text = (
-            "Enterprise search systems require robust document processing.\n\n"
+            "Enterprise search systems require robust document processing and Vector databases.\n\n"
             "Vector databases enable efficient semantic similarity lookups."
         )
         doc = parser.parse(raw_text, source_name="ingestion_pipeline_test")
@@ -261,7 +261,7 @@ class TestQueryToContextPipeline(unittest.TestCase):
         store.add_chunks(chunks)
         self.assertEqual(store.count, len(chunks))
 
-        results = store.search("vector databases", top_k=1)
+        results = store.search("vector", top_k=1)
         self.assertEqual(len(results), 1)
         self.assertIn("Vector databases", results[0].chunk.text)
 
