@@ -34,6 +34,14 @@ ignore = [] # Specific rules to ignore
 quote-style = "double" # Use double quotes for strings
 skip-magic-trailing-comma = true # Allow magic trailing commas
 
+[tool.mypy]
+python_version = "3.10" # Specify the Python version
+exclude = [
+    "src/doc_intelligence/cli", # Exclude CLI related files from type checking
+    "src/doc_intelligence/dashboard",
+]
+strict = true # Enable strict type checking
+
 [tool.ruff.lint.isort]
 known-third-party = ["fastapi", "uvicorn", "pytest", "sentence_transformers"] # Mark these as third-party for sorting
 
