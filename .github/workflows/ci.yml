@@ -36,6 +36,19 @@ jobs:
         run: |
           python -m pytest src/tests tests
 
+      - name: Build distribution
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        run: python -m build
+
+      - name: Publish to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          pip install twine
+          twine upload dist/*
+
   deploy-docs:
     needs: test
     runs-on: ubuntu-latest
