@@ -46,11 +46,13 @@ api = [
     "uvicorn[standard]>=0.22.0", # Added [standard] for production use
 ]
 dev = [
+    "ruff",
+    "mypy",
+]
+test = [
     "pytest>=7.0",
     "pytest-benchmark>=4.0.0",
     "sentence-transformers>=3.0.0",  # Added for AnswerRelevanceEvaluator
-    "ruff",
-    "mypy",
 ]
 
 [tool.setuptools.packages.find]
